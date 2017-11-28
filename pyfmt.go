@@ -23,12 +23,18 @@ type ff struct {
 
 	// argMap is a map of strings, as an alternate format parameter method
 	argMap map[string]interface{}
+
+	// render renders format parameters
+	r render
 }
 
 // newFormater creates a new ff struct.
 // TODO(slongfield): Investigate using a sync.Pool to avoid reallocation.
 func newFormater() *ff {
-	return &ff{}
+	f := ff{}
+	f.listPos = 0
+	f.r.init(&f.buf)
+	return &f
 }
 
 // doFormat parses the string, and executes a format command. Stores the output in ff's buf.
@@ -61,10 +67,42 @@ func (f *ff) doFormat(format string) error {
 		if format[i] == '{' {
 			f.buf.WriteString("{")
 			i++
+			continue
 		}
-		// TODO(slongfield): Inner loop to parse the format string.
+		// TODO(slongfield): Parse the format string.
+		f.r.clearflags()
+		cachei = i
+		for i < end && format[i] != '}' {
+			i++
+		}
+		if format[i] != '}' {
+			return errors.New("Single '{' encountered in format string")
+		}
+		argName := format[cachei:i]
+		var err error
+		f.r.val, err = f.getArg(argName)
+		if err != nil {
+			return err
+		}
+		if err = f.r.render(); err != nil {
+			return err
+		}
+		i++
 	}
 	return nil
+}
+
+func (f *ff) getArg(argName string) (interface{}, error) {
+	if f.useList && argName == "" {
+		if f.listPos < len(f.argList) {
+			arg := f.argList[f.listPos]
+			f.listPos++
+			return arg, nil
+		} else {
+			return nil, fmt.Errorf("Format index (%d) out of range (%d)", f.listPos, len(f.argList))
+		}
+	}
+	return nil, errors.New("Not Implemented!")
 }
 
 // Format is the equivlent of Python's string.format() function. Takes a list of possible elements
