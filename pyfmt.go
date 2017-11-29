@@ -3,6 +3,7 @@ package pyfmt
 import (
 	"errors"
 	"fmt"
+	"strconv"
 )
 
 // Using a simple []byte instead of bytes.Buffer to avoid the dependency.
@@ -100,6 +101,17 @@ func (f *ff) getArg(argName string) (interface{}, error) {
 			return arg, nil
 		} else {
 			return nil, fmt.Errorf("Format index (%d) out of range (%d)", f.listPos, len(f.argList))
+		}
+	} else if f.useList {
+		pos, err := strconv.Atoi(argName)
+		if err != nil {
+			return nil, fmt.Errorf("Invalid index: %s: %v", argName, err)
+		}
+		if pos < len(f.argList) {
+			arg := f.argList[pos]
+			return arg, nil
+		} else {
+			return nil, fmt.Errorf("Format index (%d) out of range (%d)", pos, len(f.argList))
 		}
 	}
 	return nil, errors.New("Not Implemented!")
