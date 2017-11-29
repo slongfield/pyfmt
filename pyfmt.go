@@ -150,6 +150,9 @@ func FormatMap(format string, a map[string]interface{}) (string, error) {
 	return s, nil
 }
 
+// TODO(slongfield): FormatStruct
+// Similar to FormatMap, but it takes an arbitrary struct, and uses reflection to get the elements.
+
 // MustFormat is like Format, but panics on error.
 func MustFormat(format string, a ...interface{}) string {
 	s, err := Format(format, a...)
