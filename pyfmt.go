@@ -113,8 +113,13 @@ func (f *ff) getArg(argName string) (interface{}, error) {
 		} else {
 			return nil, fmt.Errorf("Format index (%d) out of range (%d)", pos, len(f.argList))
 		}
+	} else {
+		arg, ok := f.argMap[argName]
+		if !ok {
+			return nil, fmt.Errorf("KeyError: %s", argName)
+		}
+		return arg, nil
 	}
-	return nil, errors.New("Not Implemented!")
 }
 
 // Format is the equivlent of Python's string.format() function. Takes a list of possible elements
@@ -134,7 +139,15 @@ func Format(format string, a ...interface{}) (string, error) {
 // FormatMap is similar to Python's string.format(), but takes a map from name to interface to allow
 // for {name} style formatting.
 func FormatMap(format string, a map[string]interface{}) (string, error) {
-	return fmt.Sprintf(format, a), nil
+	f := newFormater()
+	f.argMap = a
+	f.useList = false
+	err := f.doFormat(format)
+	if err != nil {
+		return "", err
+	}
+	s := string(f.buf)
+	return s, nil
 }
 
 // MustFormat is like Format, but panics on error.
