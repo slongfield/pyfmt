@@ -20,6 +20,9 @@ func TestBasicFormat(t *testing.T) {
 		{"{1}_{0}", []interface{}{"a", "b"}, "b_a"},
 		{"{2}", []interface{}{"a", "b", "c"}, "c"},
 		{"{}{1}", []interface{}{"你好", "世界"}, "你好世界"},
+		{"{}", []interface{}{1}, "1"},
+		{"{}", []interface{}{int8(-1)}, "-1"},
+		{"{}", []interface{}{uint8(1)}, "1"},
 	}
 
 	for _, test := range tests {
@@ -49,6 +52,9 @@ func TestBasicMapFormat(t *testing.T) {
 		{"{test}", map[string]interface{}{"test": "asdf"}, "asdf"},
 		{"{a}{c}", map[string]interface{}{"a": "1234", "b": "error", "c": "5678"}, "12345678"},
 		{"{hello}{world}", map[string]interface{}{"hello": "你好", "world": "世界"}, "你好世界"},
+		{"{one}", map[string]interface{}{"one": 1}, "1"},
+		{"{one}", map[string]interface{}{"one": int16(-1)}, "-1"},
+		{"{one}", map[string]interface{}{"one": uint32(1)}, "1"},
 	}
 	for _, test := range tests {
 		defer func() {
