@@ -28,39 +28,39 @@ func (r *render) clearflags() {
 
 func (r *render) render() error {
 	// TODO(slongfield) Dispatch to different functions if the type is set.
-	switch r.val.(type) {
+	switch t := r.val.(type) {
 	case string:
 		r.buf.WriteString(r.val.(string))
 		return nil
 	case int:
-		r.buf.WriteString(strconv.FormatInt(int64(r.val.(int)), 10))
+		r.buf.WriteString(strconv.FormatInt(int64(t), 10))
 		return nil
 	case int8:
-		r.buf.WriteString(strconv.FormatInt(int64(r.val.(int8)), 10))
+		r.buf.WriteString(strconv.FormatInt(int64(t), 10))
 		return nil
 	case int16:
-		r.buf.WriteString(strconv.FormatInt(int64(r.val.(int16)), 10))
+		r.buf.WriteString(strconv.FormatInt(int64(t), 10))
 		return nil
 	case int32:
-		r.buf.WriteString(strconv.FormatInt(int64(r.val.(int32)), 10))
+		r.buf.WriteString(strconv.FormatInt(int64(t), 10))
 		return nil
 	case int64:
-		r.buf.WriteString(strconv.FormatInt(r.val.(int64), 10))
+		r.buf.WriteString(strconv.FormatInt(t, 10))
 		return nil
 	case uint:
-		r.buf.WriteString(strconv.FormatUint(uint64(r.val.(uint)), 10))
+		r.buf.WriteString(strconv.FormatUint(uint64(t), 10))
 		return nil
 	case uint8:
-		r.buf.WriteString(strconv.FormatUint(uint64(r.val.(uint8)), 10))
+		r.buf.WriteString(strconv.FormatUint(uint64(t), 10))
 		return nil
 	case uint16:
-		r.buf.WriteString(strconv.FormatUint(uint64(r.val.(uint16)), 10))
+		r.buf.WriteString(strconv.FormatUint(uint64(t), 10))
 		return nil
 	case uint32:
-		r.buf.WriteString(strconv.FormatUint(uint64(r.val.(uint32)), 10))
+		r.buf.WriteString(strconv.FormatUint(uint64(t), 10))
 		return nil
 	case uint64:
-		r.buf.WriteString(strconv.FormatUint(r.val.(uint64), 10))
+		r.buf.WriteString(strconv.FormatUint(t, 10))
 		return nil
 
 	default:
