@@ -3,6 +3,7 @@ package pyfmt
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"strconv"
 )
 
@@ -134,7 +135,13 @@ func (f *ff) getArg(argName string) (interface{}, error) {
 		}
 		return arg, nil
 	case useStruct:
-		return nil, errors.New("unimplemented")
+		arg := reflect.ValueOf(f.argStruct).FieldByName(argName)
+		if arg.IsValid() {
+			b := arg.Interface()
+			fmt.Printf("Returning arg: %v %v\n", b, arg.Kind())
+			return b, nil
+		}
+		return nil, fmt.Errorf("KeyError: %s", argName)
 	default:
 		return nil, errors.New("unreachable")
 	}
@@ -144,6 +151,7 @@ func (f *ff) getArg(argName string) (interface{}, error) {
 // to use in formatting, and substitutes them. Only allows for the {}, {0} style of substitutions.
 func Format(format string, a ...interface{}) (string, error) {
 	f := newFormater()
+	f.argList = a
 	f.argSrc = useList
 	err := f.doFormat(format)
 	if err != nil {
@@ -158,6 +166,7 @@ func Format(format string, a ...interface{}) (string, error) {
 func FormatMap(format string, a map[string]interface{}) (string, error) {
 	f := newFormater()
 	f.argSrc = useMap
+	f.argMap = a
 	err := f.doFormat(format)
 	if err != nil {
 		return "", err
@@ -168,8 +177,12 @@ func FormatMap(format string, a map[string]interface{}) (string, error) {
 
 // Similar to FormatMap, but it takes an arbitrary struct, and uses reflection to get the elements.
 func FormatStruct(format string, a interface{}) (string, error) {
+	if reflect.ValueOf(a).Kind() != reflect.Struct {
+		return "", errors.New("FormatStruct must be called with a struct")
+	}
 	f := newFormater()
 	f.argSrc = useStruct
+	f.argStruct = a
 	err := f.doFormat(format)
 	if err != nil {
 		return "", err
@@ -197,7 +210,7 @@ func MustFormatMap(format string, a map[string]interface{}) string {
 }
 
 // MustFormatStruct is like FormatStruct, but panics on error.
-func MustFormatStruct(format string, a map[string]interface{}) string {
+func MustFormatStruct(format string, a interface{}) string {
 	s, err := FormatStruct(format, a)
 	if err != nil {
 		panic(err)

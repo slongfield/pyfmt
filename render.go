@@ -1,7 +1,8 @@
 package pyfmt
 
 import (
-	"errors"
+	"fmt"
+	"reflect"
 	"strconv"
 )
 
@@ -64,6 +65,6 @@ func (r *render) render() error {
 		return nil
 
 	default:
-		return errors.New("Unimplemented!")
+		return fmt.Errorf("Unimplemented! %v %v", r.val, reflect.TypeOf(r.val).Kind())
 	}
 }
