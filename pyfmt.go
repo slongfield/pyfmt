@@ -13,17 +13,28 @@ func (b *buffer) WriteString(s string) {
 	*b = append(*b, s...)
 }
 
+const (
+	useMap = iota
+	useList
+	useStruct
+)
+
 // ff is used to store a formatter's state.
 type ff struct {
 	buf buffer
 
+	// Which kind of arg source we shoul use. One of {useMap, useList, useStruct}
+	argSrc int
+
 	// argList is the list of arguments, if it was passed that way.
 	argList []interface{}
-	useList bool
 	listPos int
 
 	// argMap is a map of strings, as an alternate format parameter method
 	argMap map[string]interface{}
+
+	// argStruct is a struct used for format parameters.
+	argStruct interface{}
 
 	// render renders format parameters
 	r render
@@ -94,31 +105,38 @@ func (f *ff) doFormat(format string) error {
 }
 
 func (f *ff) getArg(argName string) (interface{}, error) {
-	if f.useList && argName == "" {
-		if f.listPos < len(f.argList) {
-			arg := f.argList[f.listPos]
-			f.listPos++
-			return arg, nil
+	switch f.argSrc {
+	case useList:
+		if argName == "" {
+			if f.listPos < len(f.argList) {
+				arg := f.argList[f.listPos]
+				f.listPos++
+				return arg, nil
+			} else {
+				return nil, fmt.Errorf("Format index (%d) out of range (%d)", f.listPos, len(f.argList))
+			}
 		} else {
-			return nil, fmt.Errorf("Format index (%d) out of range (%d)", f.listPos, len(f.argList))
+			pos, err := strconv.Atoi(argName)
+			if err != nil {
+				return nil, fmt.Errorf("Invalid index: %s: %v", argName, err)
+			}
+			if pos < len(f.argList) {
+				arg := f.argList[pos]
+				return arg, nil
+			} else {
+				return nil, fmt.Errorf("Format index (%d) out of range (%d)", pos, len(f.argList))
+			}
 		}
-	} else if f.useList {
-		pos, err := strconv.Atoi(argName)
-		if err != nil {
-			return nil, fmt.Errorf("Invalid index: %s: %v", argName, err)
-		}
-		if pos < len(f.argList) {
-			arg := f.argList[pos]
-			return arg, nil
-		} else {
-			return nil, fmt.Errorf("Format index (%d) out of range (%d)", pos, len(f.argList))
-		}
-	} else {
+	case useMap:
 		arg, ok := f.argMap[argName]
 		if !ok {
 			return nil, fmt.Errorf("KeyError: %s", argName)
 		}
 		return arg, nil
+	case useStruct:
+		return nil, errors.New("unimplemented")
+	default:
+		return nil, errors.New("unreachable")
 	}
 }
 
@@ -126,8 +144,7 @@ func (f *ff) getArg(argName string) (interface{}, error) {
 // to use in formatting, and substitutes them. Only allows for the {}, {0} style of substitutions.
 func Format(format string, a ...interface{}) (string, error) {
 	f := newFormater()
-	f.argList = a
-	f.useList = true
+	f.argSrc = useList
 	err := f.doFormat(format)
 	if err != nil {
 		return "", err
@@ -140,8 +157,7 @@ func Format(format string, a ...interface{}) (string, error) {
 // for {name} style formatting.
 func FormatMap(format string, a map[string]interface{}) (string, error) {
 	f := newFormater()
-	f.argMap = a
-	f.useList = false
+	f.argSrc = useMap
 	err := f.doFormat(format)
 	if err != nil {
 		return "", err
@@ -150,8 +166,17 @@ func FormatMap(format string, a map[string]interface{}) (string, error) {
 	return s, nil
 }
 
-// TODO(slongfield): FormatStruct
 // Similar to FormatMap, but it takes an arbitrary struct, and uses reflection to get the elements.
+func FormatStruct(format string, a interface{}) (string, error) {
+	f := newFormater()
+	f.argSrc = useStruct
+	err := f.doFormat(format)
+	if err != nil {
+		return "", err
+	}
+	s := string(f.buf)
+	return s, nil
+}
 
 // MustFormat is like Format, but panics on error.
 func MustFormat(format string, a ...interface{}) string {
@@ -165,6 +190,15 @@ func MustFormat(format string, a ...interface{}) string {
 // MustFormatMap is like FormatMap, but panics on error.
 func MustFormatMap(format string, a map[string]interface{}) string {
 	s, err := FormatMap(format, a)
+	if err != nil {
+		panic(err)
+	}
+	return s
+}
+
+// MustFormatStruct is like FormatStruct, but panics on error.
+func MustFormatStruct(format string, a map[string]interface{}) string {
+	s, err := FormatStruct(format, a)
 	if err != nil {
 		panic(err)
 	}

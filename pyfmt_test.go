@@ -38,7 +38,7 @@ func TestBasicFormat(t *testing.T) {
 	}
 }
 
-func TestBasicMapFormat(t *testing.T) {
+func TestBasicFormatMap(t *testing.T) {
 	tests := []struct {
 		fmtStr string
 		params map[string]interface{}
@@ -65,6 +65,39 @@ func TestBasicMapFormat(t *testing.T) {
 		got := MustFormatMap(test.fmtStr, test.params)
 		if got != test.want {
 			t.Errorf("MustFormatMap(%v, %v) = %v, want %v", test.fmtStr, test.params, got, test.want)
+		}
+	}
+}
+
+func TestBasicFormatStruct(t *testing.T) {
+
+	type ts struct {
+		test  string
+		hello string
+		world string
+		a     int8
+		b     uint32
+		c     int64
+	}
+
+	tests := []struct {
+		fmtStr string
+		params ts
+		want   string
+	}{
+		{"", ts{}, ""},
+		{"{test}", ts{test: "asdf"}, "asdf"},
+		{"{a}{c}", ts{a: 1, b: 2, c: 3}, "13"},
+	}
+	for _, test := range tests {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("MustFormatStruct(%v, %v) paniced: %v", test.fmtStr, test.params, r)
+			}
+		}()
+		got := MustFormatStruct(test.fmtStr, test.params)
+		if got != test.want {
+			t.Errorf("MustFormatStruct(%v, %v) = %v, want %v", test.fmtStr, test.params, got, test.want)
 		}
 	}
 }
