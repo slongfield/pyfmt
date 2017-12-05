@@ -63,8 +63,41 @@ func (r *render) render() error {
 	case uint64:
 		r.buf.WriteString(strconv.FormatUint(t, 10))
 		return nil
-
+	case reflect.Value:
+		if t.IsValid() && t.CanInterface() {
+			r.val = t.Interface()
+			return r.render()
+		}
+		return r.renderValue(t)
 	default:
 		return fmt.Errorf("Unimplemented! %v %v", r.val, reflect.TypeOf(r.val).Kind())
+	}
+}
+
+func (r *render) renderValue(v reflect.Value) error {
+	switch v.Kind() {
+	case reflect.Invalid:
+		return fmt.Errorf("Invalid value: %v", v)
+	// TODO(slongfield): Factor out int rendering, share with above.
+	case reflect.Int:
+		r.buf.WriteString(strconv.FormatInt(int64(v.Int()), 10))
+		return nil
+	case reflect.Int8:
+		r.buf.WriteString(strconv.FormatInt(int64(v.Int()), 10))
+		return nil
+	case reflect.Int16:
+		r.buf.WriteString(strconv.FormatInt(int64(v.Int()), 10))
+		return nil
+	case reflect.Int32:
+		r.buf.WriteString(strconv.FormatInt(int64(v.Int()), 10))
+		return nil
+	case reflect.Int64:
+		r.buf.WriteString(strconv.FormatInt(int64(v.Int()), 10))
+		return nil
+	case reflect.String:
+		r.buf.WriteString(v.String())
+		return nil
+	default:
+		return fmt.Errorf("Unimplemented reflect type %v for %v ", v.Kind(), v)
 	}
 }

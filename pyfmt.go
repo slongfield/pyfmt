@@ -137,9 +137,7 @@ func (f *ff) getArg(argName string) (interface{}, error) {
 	case useStruct:
 		arg := reflect.ValueOf(f.argStruct).FieldByName(argName)
 		if arg.IsValid() {
-			b := arg.Interface()
-			fmt.Printf("Returning arg: %v %v\n", b, arg.Kind())
-			return b, nil
+			return arg, nil
 		}
 		return nil, fmt.Errorf("KeyError: %s", argName)
 	default:
