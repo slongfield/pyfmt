@@ -78,21 +78,11 @@ func (r *render) renderValue(v reflect.Value) error {
 	switch v.Kind() {
 	case reflect.Invalid:
 		return fmt.Errorf("Invalid value: %v", v)
-	// TODO(slongfield): Factor out int rendering, share with above.
-	case reflect.Int:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		r.buf.WriteString(strconv.FormatInt(int64(v.Int()), 10))
 		return nil
-	case reflect.Int8:
-		r.buf.WriteString(strconv.FormatInt(int64(v.Int()), 10))
-		return nil
-	case reflect.Int16:
-		r.buf.WriteString(strconv.FormatInt(int64(v.Int()), 10))
-		return nil
-	case reflect.Int32:
-		r.buf.WriteString(strconv.FormatInt(int64(v.Int()), 10))
-		return nil
-	case reflect.Int64:
-		r.buf.WriteString(strconv.FormatInt(int64(v.Int()), 10))
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		r.buf.WriteString(strconv.FormatUint(uint64(v.Uint()), 10))
 		return nil
 	case reflect.String:
 		r.buf.WriteString(v.String())
