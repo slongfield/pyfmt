@@ -20,11 +20,15 @@ type render struct {
 
 func (r *render) init(buf *buffer) {
 	r.buf = buf
-	r.clearflags()
+	r.clearFlags()
 }
 
-func (r *render) clearflags() {
+func (r *render) clearFlags() {
 	r.flags = flags{}
+}
+
+func (r *render) parseFlags(string) error {
+	return nil
 }
 
 func (r *render) render() error {

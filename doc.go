@@ -97,7 +97,7 @@ The optional align feature can be one of the following:
   '<': left-aligned
 	'>': right-aligned
 	'=': padding after the sign, but before the digits (e.g., for +000042)
-	'^': centerec
+	'^': centered
 
 If an align flag is defined, a 'fill' character can also be defined. If undefined, space (' ') will
 be used.

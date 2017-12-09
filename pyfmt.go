@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // Using a simple []byte instead of bytes.Buffer to avoid the dependency.
@@ -82,8 +83,6 @@ func (f *ff) doFormat(format string) error {
 			i++
 			continue
 		}
-		// TODO(slongfield): Parse the format string.
-		f.r.clearflags()
 		cachei = i
 		for i < end && format[i] != '}' {
 			i++
@@ -91,18 +90,29 @@ func (f *ff) doFormat(format string) error {
 		if format[i] != '}' {
 			return errors.New("Single '{' encountered in format string")
 		}
-		argName := format[cachei:i]
+		field := format[cachei:i]
 		var err error
-		f.r.val, err = f.getArg(argName)
+		name, format := splitFormat(field)
+		f.r.val, err = f.getArg(name)
 		if err != nil {
 			return err
 		}
+		f.r.clearFlags()
+		f.r.parseFlags(format)
 		if err = f.r.render(); err != nil {
 			return err
 		}
 		i++
 	}
 	return nil
+}
+
+func splitFormat(field string) (string, string) {
+	s := strings.SplitN(field, ":", 2)
+	if len(s) == 1 {
+		return s[0], ""
+	}
+	return s[0], s[1]
 }
 
 func (f *ff) getArg(argName string) (interface{}, error) {
