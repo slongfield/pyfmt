@@ -1,12 +1,53 @@
 package pyfmt
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
+	"unicode/utf8"
+)
+
+const (
+	left = iota
+	right
+	padSign
+	center
+)
+
+const (
+	signPos = iota
+	signNeg
+	signSpace
+)
+
+const (
+	binary = iota
+	decimal
+	octal
+	hex
+	hexCap
+)
+
+const (
+	sci = iota
+	sciCap
+	fix
+	fixCap
+	gen
+	genCap
+	percent
 )
 
 type flags struct {
+	fillChar   rune
+	align      int
+	sign       int
+	showRadix  bool
+	minWidth   uint64
+	precision  uint64
+	renderType int
 }
 
 // Render is the renderer used to render dispatched format strings into a buffer that's been set up
@@ -27,7 +68,84 @@ func (r *render) clearFlags() {
 	r.flags = flags{}
 }
 
-func (r *render) parseFlags(string) error {
+var flagPattern = regexp.MustCompile(`(.[<>=^]|[<>=^]?)([\+\- ]?)(#?)(\d*)\.?(\d*)([bdoxXeEfFgG%]?)`)
+
+func (r *render) parseFlags(flags string) error {
+	if flags == "" {
+		return nil
+	}
+	if !flagPattern.MatchString(flags) {
+		return errors.New(MustFormat("Invalid flag pattern: {}", flags))
+	}
+	f := flagPattern.FindStringSubmatch(flags)
+	if len(f[1]) > 1 {
+		var size int
+		r.fillChar, size = utf8.DecodeRuneInString(f[1])
+		f[1] = f[1][size:]
+	}
+	if f[1] != "" {
+		switch f[1] {
+		case "<":
+			r.align = left
+		case ">":
+			r.align = right
+		case "=":
+			r.align = padSign
+		case "^":
+			r.align = center
+		default:
+			panic("Unreachable, this should never happen.")
+		}
+	}
+	if f[2] != "" {
+		switch f[2] {
+		case "+":
+			r.sign = signPos
+		case "-":
+			r.sign = signNeg
+		case " ":
+			r.sign = signSpace
+		}
+	}
+	if f[3] == "#" {
+		r.showRadix = true
+	}
+	if f[4] != "" {
+		r.minWidth, _ = strconv.ParseUint(f[4], 10, 64)
+	}
+	if f[5] != "" {
+		r.precision, _ = strconv.ParseUint(f[5], 10, 64)
+	}
+	if f[6] != "" {
+		switch f[6] {
+		case "b":
+			r.renderType = binary
+		case "d":
+			r.renderType = decimal
+		case "o":
+			r.renderType = octal
+		case "x":
+			r.renderType = hex
+		case "X":
+			r.renderType = hexCap
+		case "e":
+			r.renderType = sci
+		case "E":
+			r.renderType = sciCap
+		case "f":
+			r.renderType = fix
+		case "F":
+			r.renderType = fixCap
+		case "g":
+			r.renderType = gen
+		case "G":
+			r.renderType = genCap
+		case "%":
+			r.renderType = percent
+		default:
+			panic(MustFormat("Unrechable. Saw type match {} not in regex.", f[6]))
+		}
+	}
 	return nil
 }
 

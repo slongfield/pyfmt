@@ -22,8 +22,6 @@ you call.
 
 Simple field names:
 
-Simple field name lookup depends on which of the Format functions you're calling.
-
 Using the base Format function, you can lookup fields in two ways from lists, first, by {}, which
 gets the 'next' item, and second, by {n}, which gets the nth item. Accessing these two ways is
 independent, so while
@@ -111,7 +109,8 @@ The optional 'sign' is only valid for numeric types and can be:
 If # is present, when using the binary, octal, or hex types, a '0b', '0o', or '0x' will be
 prepended, respectively.
 
-The minimumwidth field specifies a minimum width, which is helpful when used with alignment.
+The minimumwidth field specifies a minimum width, which is helpful when used with alignment. If
+preceeded with a zero, numbers will be zero-padded.
 
 The precision field specifies a maximum width for non-floating point, non-integer types, and the
 number of points to show after the decimal point for floating types.
@@ -135,7 +134,8 @@ For floats:
 	'g' - General format, prints as a fixed point unless its too large, than switches to scientific
 	      notation. (default)
 	'G' - Similar to g, but uses capital letters
-	'%' - Percentage, multiplies the number by 100 and displays it with a '%' sign.
+	'%' - Percentage, multiplies the number by 100 and displays it with a '%' sign. Can also be
+	      applied to integer types.
 
 Examples
 
