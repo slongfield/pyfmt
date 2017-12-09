@@ -93,9 +93,9 @@ specifier:
 The optional align feature can be one of the following:
 
   '<': left-aligned
-	'>': right-aligned
-	'=': padding after the sign, but before the digits (e.g., for +000042)
-	'^': centered
+  '>': right-aligned
+  '=': padding after the sign, but before the digits (e.g., for +000042)
+  '^': centered
 
 If an align flag is defined, a 'fill' character can also be defined. If undefined, space (' ') will
 be used.
@@ -103,8 +103,8 @@ be used.
 The optional 'sign' is only valid for numeric types and can be:
 
   '+': Show sign for both positive and negative numbers
-	'-': Show sign only for negative numbers (default)
-	' ': use a leading space for positive numbers
+  '-': Show sign only for negative numbers (default)
+  ' ': use a leading space for positive numbers
 
 If # is present, when using the binary, octal, or hex types, a '0b', '0o', or '0x' will be
 prepended, respectively.
@@ -120,22 +120,22 @@ The 'type' format determines what type the value will be formatted as.
 For integers:
 
   'b' - Binary, base 2
-	'd' - Decimal, base 10 (default)
-	'o' - Octal, base 8
-	'x' - Hexadecimal, base 16
-	'X' - Hexadecimal, base 16, using upper-case letters
+  'd' - Decimal, base 10 (default)
+  'o' - Octal, base 8
+  'x' - Hexadecimal, base 16
+  'X' - Hexadecimal, base 16, using upper-case letters
 
 For floats:
 
   'e' - Scientific notation
-	'E' - Similar to e, but uppercase
-	'f' - Fixed point, displays number as a fixed-point number.
-	'F' - Same, but uppercase.
-	'g' - General format, prints as a fixed point unless its too large, than switches to scientific
-	      notation. (default)
-	'G' - Similar to g, but uses capital letters
-	'%' - Percentage, multiplies the number by 100 and displays it with a '%' sign. Can also be
-	      applied to integer types.
+  'E' - Similar to e, but uppercase
+  'f' - Fixed point, displays number as a fixed-point number.
+  'F' - Same, but uppercase.
+  'g' - General format, prints as a fixed point unless its too large, than switches to scientific
+        notation. (default)
+  'G' - Similar to g, but uses capital letters
+  '%' - Percentage, multiplies the number by 100 and displays it with a '%' sign. Can also be
+        applied to integer types.
 
 Examples
 
