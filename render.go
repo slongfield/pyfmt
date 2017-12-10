@@ -23,20 +23,20 @@ const (
 )
 
 const (
-	binary = iota
-	decimal
+	decimal = iota
+	binary
 	octal
 	hex
 	hexCap
 )
 
 const (
-	sci = iota
+	gen = iota
+	genCap
+	sci
 	sciCap
 	fix
 	fixCap
-	gen
-	genCap
 	percent
 )
 
@@ -68,7 +68,7 @@ func (r *render) clearFlags() {
 	r.flags = flags{}
 }
 
-var flagPattern = regexp.MustCompile(`(.[<>=^]|[<>=^]?)([\+\- ]?)(#?)(\d*)\.?(\d*)([bdoxXeEfFgG%]?)`)
+var flagPattern = regexp.MustCompile(`\A(.[<>=^]|[<>=^]?)([\+\- ]?)(#?)(\d*)\.?(\d*)([bdoxXeEfFgG%]?)\z`)
 
 func (r *render) parseFlags(flags string) error {
 	if flags == "" {
