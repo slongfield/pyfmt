@@ -6,6 +6,8 @@ package main
 import "C"
 
 import (
+	"fmt"
+
 	"github.com/slongfield/pyfmt"
 )
 
@@ -13,7 +15,10 @@ import (
 //export FormatOneInt
 func FormatOneInt(cformat *C.char, arg C.int) *C.char {
 	format := C.GoString(cformat)
-	result, _ := pyfmt.Format(format, arg)
+	result, err := pyfmt.Format(format, int32(arg))
+	if err != nil {
+		fmt.Printf("Error formatting: %v", err)
+	}
 	// Note: This allocates memory, and isn't known to the Golang memory manager, so will likely end
 	// up leaking.
 	// TODO(slongfield): Don't leak memory across these interfaces.
