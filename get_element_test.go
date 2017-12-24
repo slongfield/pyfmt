@@ -17,6 +17,7 @@ func TestGetElement(t *testing.T) {
 		{[]interface{}{3}, "0", 0, 3},
 		{[]interface{}{3, "asdf"}, "1", 0, "asdf"},
 		{[]interface{}{struct{ Test string }{Test: "asdf"}}, "Test", 0, "asdf"},
+		{[]interface{}{struct{ test string }{test: "asdf"}}, "test", 0, "asdf"},
 	}
 
 	for _, test := range tests {

@@ -44,12 +44,27 @@ func getElementByName(name string, src interface{}) (interface{}, error) {
 	if reflect.ValueOf(src).Kind() == reflect.Struct {
 		v := reflect.ValueOf(src).FieldByName(name)
 		if v.IsValid() {
-			if v.CanInterface() {
-				return v.Interface(), nil
-			}
-			return v, nil
+			return getElementFromValue(v), nil
 		}
 		return nil, fmt.Errorf("Could not find field: %s", name)
 	}
 	return nil, nil
+}
+
+func getElementFromValue(val reflect.Value) interface{} {
+	if !val.IsValid() {
+		return nil
+	}
+	if val.CanInterface() {
+		return val.Interface()
+	}
+	switch val.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return int64(val.Int())
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return uint64(val.Uint())
+	case reflect.String:
+		return val.String()
+	}
+	return nil
 }
