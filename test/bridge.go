@@ -15,7 +15,7 @@ import (
 //export FormatOneInt
 func FormatOneInt(cformat *C.char, arg C.int) *C.char {
 	format := C.GoString(cformat)
-	result, err := pyfmt.Format(format, int32(arg))
+	result, err := pyfmt.Fmt(format, int32(arg))
 	if err != nil {
 		fmt.Printf("Error formatting: %v", err)
 	}
