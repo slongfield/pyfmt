@@ -23,41 +23,148 @@ func getElement(name string, offset int, elems ...interface{}) (interface{}, err
 	if len(elems) == 0 {
 		return nil, fmt.Errorf("attempted to fetch %v/%v from empty list", name, offset)
 	}
-	if name == "" {
+	fields, err := splitName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	val := elems[0]
+	idx := 0
+	if len(fields) == 0 || fields[0] == "" {
 		if offset < len(elems) {
-			return elems[offset], nil
+			val = elems[offset]
+			idx++
+		} else {
+			return nil, fmt.Errorf("too large offset: %v", offset)
 		}
-		return nil, fmt.Errorf("too large offset: %v", offset)
-	}
-	if parse, err := strconv.ParseUint(name, 10, 64); err == nil {
+	} else if parse, err := strconv.ParseUint(fields[0], 10, 64); err == nil {
 		if parse < uint64(len(elems)) {
-			return elems[parse], nil
+			val = elems[parse]
+			idx++
+		} else {
+			return nil, fmt.Errorf("index out of bounds: %v", parse)
 		}
-		return nil, fmt.Errorf("too large parse: %v", parse)
 	}
 
-	return getElementByName(name, elems[0])
+	if idx < len(fields) {
+		for _, field := range fields[idx:] {
+			val, err = elementByName(field, val)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return val, nil
 }
 
-// Gets the element by name, if possible.
-func getElementByName(name string, src interface{}) (interface{}, error) {
-	if reflect.ValueOf(src).Kind() == reflect.Struct {
-		v := reflect.ValueOf(src).FieldByName(name)
+// splitName splits out the name into the subfields. Errors if it can't cleanly split.
+// Note that this does treat test[foo].bar and test.bar[foo] as being interchangable. This normally
+// makes sense, especially for structs-of-structs and maps-of-maps, but may be somewhat strange for
+// lists of lists, where a[5][6] can be written a.5.6.
+func splitName(name string) ([]string, error) {
+	subNames := make([]string, 0, 0)
+	end := len(name)
+	foundOpen := false
+	for i := 0; i < end; {
+		cachei := i
+		for i < end && !(name[i] == '[' || name[i] == '.' || name[i] == ']') {
+			i++
+		}
+		if i < end {
+			if name[i] == '.' {
+				subNames = append(subNames, name[cachei:i])
+				i++
+				cachei = i
+				continue
+			}
+			if name[i] == ']' && foundOpen {
+				subNames = append(subNames, name[cachei:i])
+				i++
+				cachei = i
+				foundOpen = false
+				if i < end && !(name[i] == '[' || name[i] == '.') {
+					return nil, fmt.Errorf("must begin a new subfield after a closing bracket in %s", name)
+				} else if i < end {
+					foundOpen = (name[i] == '[')
+					i++
+				}
+				continue
+			}
+			if name[i] == ']' && !foundOpen {
+				return nil, fmt.Errorf("unmatched ] in %s", name)
+			}
+			if name[i] == '[' {
+				subNames = append(subNames, name[cachei:i])
+				foundOpen = true
+				i++
+				cachei = i
+				continue
+			}
+		} else {
+			subNames = append(subNames, name[cachei:i])
+		}
+		i++
+	}
+	if foundOpen {
+		return nil, fmt.Errorf("unmatched [ in %s", name)
+	}
+	return subNames, nil
+}
+
+// elementByName will get the element by name if it's a strut or map, and error out otherwise.
+func elementByName(name string, src interface{}) (interface{}, error) {
+	var srcVal reflect.Value
+	switch src.(type) {
+	case reflect.Value:
+		srcVal = src.(reflect.Value)
+	default:
+		srcVal = reflect.ValueOf(src)
+	}
+
+	switch srcVal.Kind() {
+	case reflect.Struct:
+		v := srcVal.FieldByName(name)
 		if v.IsValid() {
-			return getElementFromValue(v), nil
+			return elementFromValue(v), nil
 		}
-		return nil, fmt.Errorf("Could not find field: %s", name)
+		return nil, fmt.Errorf("could not find field: %s", name)
+	case reflect.Map:
+		if !(reflect.ValueOf(name).Type().AssignableTo(srcVal.Type().Key())) {
+			return nil, fmt.Errorf("could not look up key %s from map %v", name, src)
+		}
+		v := srcVal.MapIndex(reflect.ValueOf(name))
+		if v.IsValid() {
+			return elementFromValue(v), nil
+		}
+		return nil, fmt.Errorf("could not find key: %s", name)
+	case reflect.Array, reflect.Slice:
+		if parse, err := strconv.ParseUint(name, 10, 64); err == nil {
+			if parse < uint64(srcVal.Len()) {
+				v := srcVal.Index(int(parse))
+				if v.IsValid() {
+					return elementFromValue(v), nil
+				}
+				return nil, fmt.Errorf("could not get index: %s", name)
+			}
+			return nil, fmt.Errorf("index out of bounds: %v", parse)
+		}
+		return nil, fmt.Errorf("could not parse index: %v", name)
+	default:
+		return nil, fmt.Errorf("attempted to get item by name from non-struct, non-map: %v %v", src, srcVal.Kind())
 	}
-	return nil, nil
 }
 
-func getElementFromValue(val reflect.Value) interface{} {
+// elementFromValue will try to turn a reflect.Value into an interface{} when possible.
+// TODO(slongfield): Figure out if we can remove this. I think it's only needed for some of the
+// tests.
+func elementFromValue(val reflect.Value) interface{} {
 	if !val.IsValid() {
 		return nil
 	}
 	if val.CanInterface() {
 		return val.Interface()
 	}
+	// TODO(slongfield): Get a larger set of values.
 	switch val.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return int64(val.Int())
@@ -66,5 +173,5 @@ func getElementFromValue(val reflect.Value) interface{} {
 	case reflect.String:
 		return val.String()
 	}
-	return nil
+	return val
 }

@@ -5,6 +5,23 @@ import (
 	"testing"
 )
 
+type inner struct {
+	test int64
+}
+
+type outer struct {
+	first  inner
+	second inner
+}
+
+func nestedMap() map[string]map[string]map[string]int64 {
+	m := make(map[string]map[string]map[string]int64)
+	m["test"] = make(map[string]map[string]int64)
+	m["test"]["bar"] = make(map[string]int64)
+	m["test"]["bar"]["foo"] = 99
+	return m
+}
+
 func TestGetElement(t *testing.T) {
 	tests := []struct {
 		elems        []interface{}
@@ -18,6 +35,11 @@ func TestGetElement(t *testing.T) {
 		{[]interface{}{3, "asdf"}, "1", 0, "asdf"},
 		{[]interface{}{struct{ Test string }{Test: "asdf"}}, "Test", 0, "asdf"},
 		{[]interface{}{struct{ test string }{test: "asdf"}}, "test", 0, "asdf"},
+		{[]interface{}{map[string]int{"test": 3, "asdf": 4}}, "test", 0, 3},
+		{[]interface{}{map[string]int{"test": 3, "asdf": 4}}, "asdf", 0, 4},
+		{[]interface{}{3, []string{"foo", "bar"}}, "1[1]", 0, "bar"},
+		{[]interface{}{struct{ foo outer }{foo: outer{first: inner{test: 5}}}}, "foo.first.test", 0, int64(5)},
+		{[]interface{}{nestedMap()}, "test[bar].foo", 0, int64(99)},
 	}
 
 	for _, test := range tests {
@@ -27,6 +49,75 @@ func TestGetElement(t *testing.T) {
 		}
 		if !reflect.DeepEqual(test.want, got) {
 			t.Errorf("getElement(%v, %v, %v) = %v Want: %v", test.lookupStr, test.lookupOffset, test.elems, got, test.want)
+		}
+	}
+}
+
+func TestGetElementErrors(t *testing.T) {
+	tests := []struct {
+		elems        []interface{}
+		lookupStr    string
+		lookupOffset int
+	}{
+		{[]interface{}{}, "", 1},
+		{[]interface{}{}, "test", 0},
+		{[]interface{}{3}, "", 1},
+		{[]interface{}{3}, "1", 0},
+		{[]interface{}{3, "asdf"}, "5", 0},
+		{[]interface{}{struct{ Test string }{Test: "asdf"}}, "Best", 0},
+		{[]interface{}{struct{ test string }{test: "asdf"}}, "asdf", 0},
+		{[]interface{}{map[string]int{"test": 3, "asdf": 4}}, "jkl;", 0},
+		{[]interface{}{map[int]string{3: "test", 4: "asdf"}}, "3", 0},
+		{[]interface{}{3, []string{"foo", "bar"}}, "1[5]", 0},
+	}
+
+	for _, test := range tests {
+		_, err := getElement(test.lookupStr, test.lookupOffset, test.elems...)
+		if err == nil {
+			t.Errorf("getElement(%v, %v, %v) Did not error!", test.lookupStr, test.lookupOffset, test.elems)
+		}
+	}
+}
+
+func TestSplitName(t *testing.T) {
+	tests := []struct {
+		name string
+		want []string
+	}{
+		{"", []string{}},
+		{"test", []string{"test"}},
+		{"foo.bar", []string{"foo", "bar"}},
+		{"foo[3].bar", []string{"foo", "3", "bar"}},
+		{"baz[3][4][5]", []string{"baz", "3", "4", "5"}},
+		{"bar[3].4[5]", []string{"bar", "3", "4", "5"}},
+	}
+
+	for _, test := range tests {
+		got, err := splitName(test.name)
+		if err != nil {
+			t.Errorf("splitName(%v) Errored: %v", test.name, err)
+		}
+		if !reflect.DeepEqual(got, test.want) {
+			t.Errorf("splitName(%#v) = %v Want: %#v", test.name, got, test.want)
+		}
+	}
+}
+
+func TestSplitNameError(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{"te[3]st"},
+		{"["},
+		{"[[["},
+		{"]"},
+		{"]]]"},
+	}
+
+	for _, test := range tests {
+		_, err := splitName(test.name)
+		if err == nil {
+			t.Errorf("splitName(%v) did not error", test.name)
 		}
 	}
 }
