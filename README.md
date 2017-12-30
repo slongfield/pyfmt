@@ -13,6 +13,15 @@ literal '{' and '}' runes to be emitted in the output.
 Each format item consists of a 'field name', which indicates which value from the argument list to
 use, and a 'format specifier', which indicates how to format that item.
 
+# Functions
+
+pyfmt implements three functions, 'Fmt', 'Must', and 'Error'. 'Fmt' formats, but may return
+an error as detailed below. 'Must' formats, but will panic when 'Fmt' would return an error, and
+'Error' acts like 'Fmt', but returns an error type. In the event that there's an error formatting
+the error, 'Error' includes the format error and as much of the formatted string as possible.
+
+All of them take a format string, and then a list of arguments to look up elements from.
+
 # Getting Values from Field Names
 
 Values can be fetched from field names in two forms: simple names, or compound names. All compound
@@ -21,45 +30,45 @@ you call.
 
 ## Simple field names:
 
-Using the base Format function, you can lookup fields in two ways from lists, first, by {}, which
-gets the 'next' item, and second, by {n}, which gets the nth item. Accessing these two ways is
-independent, so while
+The simplest look up treats the argument list as just a list. There are two possible ways to look
+up elements from this list. First, by {}, which gets the 'next' item, and second, by {n}, which
+gets the nth item. Accessing these two ways is independent, so while
 
 ```
-  Format("{} {} {}", ...)
+  pyfmt.Must("{} {} {}", ...)
 ```
 
 Is equivalent to
 
 ```
-  Format("{0} {1} {2}", ...)
+  pyfmt.Must("{0} {1} {2}", ...)
 ```
 
 so is
 
 ```
-  Format("{} {1} {2}", ...)
+  pyfmt.Must("{} {1} {2}", ...)
 ```
 
 but
 
 ```
-  Format("{} {1} {}", ...)
+  pyfmt.Must("{} {1} {}", ...)
 ```
 
 Is equivalent to:
 
 ```
-  Format("{0} {1} {1}". ...)
+  pyfmt.Must("{0} {1} {1}". ...)
 ```
 
-Accessing an element that's outside the list range, will return an error, and MustFormat will panic.
+Accessing an element that's outside the list range will return an error or panic.
 
-Using FormatMap, pass a map[string]interface{} to lookup names from the map using the string keys
-from the map. For instance:
+The first element in the list is treated specially if it's a struct or a map with string keys,
+allowing the elements from that struct or map can be directly accessed. For instance:
 
 ```
-  FormatMap("{test}", map[string]int{"test": 5})
+  pyfmt.Must("{test}", map[string]int{"test": 5})
 ```
 
 returns
@@ -70,10 +79,8 @@ returns
 
 Attempting to read from an undefined key will return an error.
 
-Using FormatStruct, you can reference arguments from a struct:
-
 ```
-  FormatStruct("{test}": myStruct{test: 5})
+  pyfmt.Must("{test}": myStruct{test: 5})
 ```
 
 returns
@@ -89,19 +96,19 @@ If the value referenced by the field is itself a List, map[string]interface{}, o
 Lists are accessed with square brackets:
 
 ```
-  Format("{0[0]}", []string{"test"}) -> "test"
+  pyfmt.Must("{0[0]}", []string{"test"}) -> "test"
 ```
 
 Similarly, maps are accessed with square brackets:
 
 ```
-  Format("{0[test]}", map[string]interface{}{"test": "42"}) -> "42"
+  pyfmt.Must("{0[test]}", map[string]interface{}{"test": "42"}) -> "42"
 ```
 
 And struct fields are accessed with period, '.'
 
 ```
-  FormatStruct("{foo.bar.baz}", MyStruct{foo: Foo{bar: Bar{baz: "test"}}}) -> "test"
+  pyfmt.Must("{foo.bar.baz}", MyStruct{foo: Foo{bar: Bar{baz: "test"}}}) -> "test"
 ```
 
 # Formatting
