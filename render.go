@@ -1,7 +1,6 @@
 package pyfmt
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -75,7 +74,8 @@ func (r *render) parseFlags(flags string) error {
 		return nil
 	}
 	if !flagPattern.MatchString(flags) {
-		return errors.New(MustFormat("Invalid flag pattern: {}", flags))
+		// TODO(slongfield): Replace with pyfmt.Error.
+		return fmt.Errorf("Invalid flag pattern: %v", flags)
 	}
 	f := flagPattern.FindStringSubmatch(flags)
 	if len(f[1]) > 1 {
@@ -143,7 +143,7 @@ func (r *render) parseFlags(flags string) error {
 		case "%":
 			r.renderType = percent
 		default:
-			panic(MustFormat("Unrechable. Saw type match {} not in regex.", f[6]))
+			panic(Must("Unrechable. Saw type match {} not in regex.", f[6]))
 		}
 	}
 	return nil

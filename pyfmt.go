@@ -3,8 +3,6 @@ package pyfmt
 import (
 	"errors"
 	"fmt"
-	"reflect"
-	"strconv"
 	"strings"
 )
 
@@ -25,18 +23,9 @@ const (
 type ff struct {
 	buf buffer
 
-	// Which kind of arg source we shoul use. One of {useMap, useList, useStruct}
-	argSrc int
-
-	// argList is the list of arguments, if it was passed that way.
-	argList []interface{}
+	// args is the list of arguments passed to Fmt.
+	args    []interface{}
 	listPos int
-
-	// argMap is a map of strings, as an alternate format parameter method
-	argMap map[string]interface{}
-
-	// argStruct is a struct used for format parameters.
-	argStruct interface{}
 
 	// render renders format parameters
 	r render
@@ -116,51 +105,18 @@ func splitFormat(field string) (string, string) {
 }
 
 func (f *ff) getArg(argName string) (interface{}, error) {
-	switch f.argSrc {
-	case useList:
-		if argName == "" {
-			if f.listPos < len(f.argList) {
-				arg := f.argList[f.listPos]
-				f.listPos++
-				return arg, nil
-			} else {
-				return nil, fmt.Errorf("Format index (%d) out of range (%d)", f.listPos, len(f.argList))
-			}
-		} else {
-			pos, err := strconv.Atoi(argName)
-			if err != nil {
-				return nil, fmt.Errorf("Invalid index: %s: %v", argName, err)
-			}
-			if pos < len(f.argList) {
-				arg := f.argList[pos]
-				return arg, nil
-			} else {
-				return nil, fmt.Errorf("Format index (%d) out of range (%d)", pos, len(f.argList))
-			}
-		}
-	case useMap:
-		arg, ok := f.argMap[argName]
-		if !ok {
-			return nil, fmt.Errorf("KeyError: %s", argName)
-		}
-		return arg, nil
-	case useStruct:
-		arg := reflect.ValueOf(f.argStruct).FieldByName(argName)
-		if arg.IsValid() {
-			return arg, nil
-		}
-		return nil, fmt.Errorf("KeyError: %s", argName)
-	default:
-		return nil, errors.New("unreachable")
+	val, err := getElement(argName, f.listPos, f.args...)
+	if argName == "" {
+		f.listPos++
 	}
+	return val, err
 }
 
-// Format is the equivlent of Python's string.format() function. Takes a list of possible elements
-// to use in formatting, and substitutes them. Only allows for the {}, {0} style of substitutions.
-func Format(format string, a ...interface{}) (string, error) {
+// Fmt is the equivlent of Python's string.format() function. Takes a list of possible elements
+// to use in formatting, and substitutes them.
+func Fmt(format string, a ...interface{}) (string, error) {
 	f := newFormater()
-	f.argList = a
-	f.argSrc = useList
+	f.args = a
 	err := f.doFormat(format)
 	if err != nil {
 		return "", err
@@ -169,59 +125,20 @@ func Format(format string, a ...interface{}) (string, error) {
 	return s, nil
 }
 
-// FormatMap is similar to Python's string.format(), but takes a map from name to interface to allow
-// for {name} style formatting.
-func FormatMap(format string, a map[string]interface{}) (string, error) {
-	f := newFormater()
-	f.argSrc = useMap
-	f.argMap = a
-	err := f.doFormat(format)
-	if err != nil {
-		return "", err
-	}
-	s := string(f.buf)
-	return s, nil
-}
-
-// Similar to FormatMap, but it takes an arbitrary struct, and uses reflection to get the elements.
-func FormatStruct(format string, a interface{}) (string, error) {
-	if reflect.ValueOf(a).Kind() != reflect.Struct {
-		return "", errors.New("FormatStruct must be called with a struct")
-	}
-	f := newFormater()
-	f.argSrc = useStruct
-	f.argStruct = a
-	err := f.doFormat(format)
-	if err != nil {
-		return "", err
-	}
-	s := string(f.buf)
-	return s, nil
-}
-
-// MustFormat is like Format, but panics on error.
-func MustFormat(format string, a ...interface{}) string {
-	s, err := Format(format, a...)
+// Must is like Fmt, but panics on error.
+func Must(format string, a ...interface{}) string {
+	s, err := Fmt(format, a...)
 	if err != nil {
 		panic(err)
 	}
 	return s
 }
 
-// MustFormatMap is like FormatMap, but panics on error.
-func MustFormatMap(format string, a map[string]interface{}) string {
-	s, err := FormatMap(format, a)
+// Error is like Fmt, but returns an error.
+func Error(format string, a ...interface{}) error {
+	s, err := Fmt(format, a...)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error formatting %v: %v", s, err)
 	}
-	return s
-}
-
-// MustFormatStruct is like FormatStruct, but panics on error.
-func MustFormatStruct(format string, a interface{}) string {
-	s, err := FormatStruct(format, a)
-	if err != nil {
-		panic(err)
-	}
-	return s
+	return errors.New(s)
 }
