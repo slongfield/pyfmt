@@ -1,6 +1,8 @@
 // Copyright header goes here.
 
 /*
+pyfmt
+
 pyfmt implements Python-style advanced string formatting.
 
 This is an alternative to the `fmt` package's Sprintf-style string formatting, and mimics the
