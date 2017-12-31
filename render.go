@@ -192,7 +192,8 @@ func (r *render) render() error {
 		}
 		return r.renderValue(t)
 	default:
-		return fmt.Errorf("Unimplemented! %v %v", r.val, reflect.TypeOf(r.val).Kind())
+		r.buf.WriteString(fmt.Sprintf("%v", r.val))
+		return nil
 	}
 }
 
