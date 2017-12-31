@@ -2,7 +2,6 @@ package pyfmt
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -138,7 +137,7 @@ func Must(format string, a ...interface{}) string {
 func Error(format string, a ...interface{}) error {
 	s, err := Fmt(format, a...)
 	if err != nil {
-		return fmt.Errorf("error formatting %v: %v", s, err)
+		return Error("error formatting {}: {}", s, err)
 	}
 	return errors.New(s)
 }

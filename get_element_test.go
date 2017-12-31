@@ -74,7 +74,7 @@ func TestGetElementErrors(t *testing.T) {
 	for _, test := range tests {
 		_, err := getElement(test.lookupStr, test.lookupOffset, test.elems...)
 		if err == nil {
-			t.Errorf("getElement(%v, %v, %v) Did not error!", test.lookupStr, test.lookupOffset, test.elems)
+			t.Errorf(Must("getElement({lookupStr}, {lookupOffset}, {elems}) Did not error!", test))
 		}
 	}
 }
@@ -95,10 +95,10 @@ func TestSplitName(t *testing.T) {
 	for _, test := range tests {
 		got, err := splitName(test.name)
 		if err != nil {
-			t.Errorf("splitName(%v) Errored: %v", test.name, err)
+			t.Errorf(Must("splitName({name}) Errored: {1}", test, err))
 		}
 		if !reflect.DeepEqual(got, test.want) {
-			t.Errorf("splitName(%#v) = %v Want: %#v", test.name, got, test.want)
+			t.Errorf(Must("splitName({name}) = {1} Want: {want}", test, got))
 		}
 	}
 }
@@ -117,7 +117,7 @@ func TestSplitNameError(t *testing.T) {
 	for _, test := range tests {
 		_, err := splitName(test.name)
 		if err == nil {
-			t.Errorf("splitName(%v) did not error", test.name)
+			t.Errorf(Must("splitName({name}) did not error", test))
 		}
 	}
 }

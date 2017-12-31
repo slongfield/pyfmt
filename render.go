@@ -75,7 +75,7 @@ func (r *render) parseFlags(flags string) error {
 	}
 	if !flagPattern.MatchString(flags) {
 		// TODO(slongfield): Replace with pyfmt.Error.
-		return fmt.Errorf("Invalid flag pattern: %v", flags)
+		return Error("Invalid flag pattern: {}", flags)
 	}
 	f := flagPattern.FindStringSubmatch(flags)
 	if len(f[1]) > 1 {
