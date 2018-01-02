@@ -35,6 +35,7 @@ func TestBasicFormat(t *testing.T) {
 		{"", []interface{}{ts{}}, ""},
 		{"{test}", []interface{}{ts{test: "asdf"}}, "asdf"},
 		{"{a}{c}", []interface{}{ts{a: 1, b: 2, c: 3}}, "13"},
+		{"0b{:b}", []interface{}{3}, "0b11"},
 	}
 
 	for _, test := range tests {

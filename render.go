@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -21,16 +22,15 @@ const (
 	signSpace
 )
 
+// Verb types.
 const (
-	decimal = iota
+	none = iota
+	decimal
 	binary
 	octal
 	hex
 	hexCap
-)
-
-const (
-	gen = iota
+	gen
 	genCap
 	sci
 	sciCap
@@ -74,7 +74,6 @@ func (r *render) parseFlags(flags string) error {
 		return nil
 	}
 	if !flagPattern.MatchString(flags) {
-		// TODO(slongfield): Replace with pyfmt.Error.
 		return Error("Invalid flag pattern: {}", flags)
 	}
 	f := flagPattern.FindStringSubmatch(flags)
@@ -151,7 +150,38 @@ func (r *render) parseFlags(flags string) error {
 
 func (r *render) render() error {
 	//TODO(slongfield): Create the format string.
-	r.buf.WriteString(fmt.Sprintf("%v", r.val))
+	var verb string
+	//TODO(slongfield): Consider doing this above.
+	switch r.renderType {
+	case binary:
+		verb = "b"
+	case decimal:
+		verb = "d"
+	case octal:
+		verb = "o"
+	case hex:
+		verb = "x"
+	case hexCap:
+		verb = "X"
+	case sci:
+		verb = "e"
+	case sciCap:
+		verb = "E"
+	case fix:
+		verb = "f"
+	case fixCap:
+		verb = "F"
+	case gen:
+		verb = "g"
+	case genCap:
+		verb = "G"
+	case percent:
+		// TODO(slongfield): Handle percent.
+		panic("Percent not yet handled.")
+	default:
+		verb = "v"
+	}
+	r.buf.WriteString(fmt.Sprintf(strings.Join([]string{"%", verb}, ""), r.val))
 	return nil
 }
 
