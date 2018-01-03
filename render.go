@@ -150,7 +150,9 @@ func (r *render) parseFlags(flags string) error {
 
 func (r *render) render() error {
 	//TODO(slongfield): Create the format string.
+	var prefix string
 	var verb string
+	var radix string
 	//TODO(slongfield): Consider doing this above.
 	switch r.renderType {
 	case binary:
@@ -181,7 +183,25 @@ func (r *render) render() error {
 	default:
 		verb = "v"
 	}
-	r.buf.WriteString(fmt.Sprintf(strings.Join([]string{"%", verb}, ""), r.val))
+	if r.showRadix {
+		if r.renderType == hex || r.renderType == hexCap {
+			radix = "#"
+		} else if r.renderType == binary {
+			prefix = "0b"
+		} else if r.renderType == octal {
+			prefix = "0o"
+		}
+	}
+	str := fmt.Sprintf(strings.Join([]string{"%", radix, verb}, ""), r.val)
+	if prefix != "" {
+		if str[0] == '-' {
+			str = strings.Join([]string{"-", prefix, str[1:]}, "")
+		} else {
+			str = strings.Join([]string{prefix, str}, "")
+		}
+	}
+
+	r.buf.WriteString(str)
 	return nil
 }
 

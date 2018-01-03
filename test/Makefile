@@ -17,5 +17,6 @@ check: build/libbridge.so build/__init__.py
 
 .PHONY: clean
 clean:
+	rm -rf _bridge.py
 	rm -rf build/
 	rm -rf __pycache__/

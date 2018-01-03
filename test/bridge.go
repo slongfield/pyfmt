@@ -19,9 +19,26 @@ func FormatOneInt(cformat *C.char, arg C.int) *C.char {
 	if err != nil {
 		fmt.Printf("Error formatting: %v", err)
 	}
-	// Note: This allocates memory, and isn't known to the Golang memory manager, so will likely end
-	// up leaking.
-	// TODO(slongfield): Don't leak memory across these interfaces.
+	return C.CString(result)
+}
+
+//export FormatOneFloat
+func FormatOneFloat(cformat *C.char, arg C.float) *C.char {
+	format := C.GoString(cformat)
+	result, err := pyfmt.Fmt(format, float32(arg))
+	if err != nil {
+		fmt.Printf("Error formatting: %v", err)
+	}
+	return C.CString(result)
+}
+
+//export FormatOneDouble
+func FormatOneDouble(cformat *C.char, arg C.double) *C.char {
+	format := C.GoString(cformat)
+	result, err := pyfmt.Fmt(format, float64(arg))
+	if err != nil {
+		fmt.Printf("Error formatting: %v", err)
+	}
 	return C.CString(result)
 }
 
