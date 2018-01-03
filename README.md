@@ -186,11 +186,6 @@ TODO(slongfield): Details on custom formatters.
 # TODOs
 
   *  Add support for alignment
-  *  Add support for integer formatting, various radixes
-  *  Add support for float formatting
   *  Add support for complex number formatting
-  *  Add support for printing structs
-  *  Add support for printing arrays/slices
-  *  Add support for printing maps
   *  Add support for custom formatters
   *  Add more tests.
