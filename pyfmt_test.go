@@ -51,3 +51,41 @@ func TestBasicFormat(t *testing.T) {
 		}
 	}
 }
+
+// Tests formatting individual values of various types.
+// TODO(slongfield): Add more tests.
+func TestSingleFormat(t *testing.T) {
+	tests := []struct {
+		fmtStr string
+		param  interface{}
+		want   string
+	}{
+		// String tests
+		{"{}", "☺", "☺"},
+
+		// Integer tests
+		{"{}", 42, "42"},
+		{"{:+#b}", 99, "+0b1100011"},
+		{"{: x}", 66, " 42"},
+
+		// Float tests
+
+		// Complex numbers
+		{"{}", 0i, "(0+0i)"},
+		{"{:3g}", 1 + 1i, "(  1 +1i)"},
+		{"{:+12.5g}", 1230000 - 0i, "(   +1.23e+06          +0i)"},
+	}
+
+	for _, test := range tests {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf(Must("Must({fmtStr}, {param}) paniced: {1}", test, r))
+			}
+		}()
+		got := Must(test.fmtStr, test.param)
+		if got != test.want {
+			t.Errorf(Must("Must({fmtStr}, {param}) = {1}, Want: {want}", test, got))
+		}
+	}
+
+}

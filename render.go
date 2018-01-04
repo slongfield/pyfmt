@@ -16,12 +16,6 @@ const (
 	center
 )
 
-const (
-	signPos = iota
-	signNeg
-	signSpace
-)
-
 // Verb types.
 const (
 	none = iota
@@ -42,10 +36,10 @@ const (
 type flags struct {
 	fillChar   rune
 	align      int
-	sign       int
+	sign       string
 	showRadix  bool
-	minWidth   uint64
-	precision  uint64
+	minWidth   string
+	precision  string
 	renderType int
 }
 
@@ -97,23 +91,19 @@ func (r *render) parseFlags(flags string) error {
 		}
 	}
 	if f[2] != "" {
-		switch f[2] {
-		case "+":
-			r.sign = signPos
-		case "-":
-			r.sign = signNeg
-		case " ":
-			r.sign = signSpace
+		// "-" is the default behavior, ignore it.
+		if f[2] != "-" {
+			r.sign = f[2]
 		}
 	}
 	if f[3] == "#" {
 		r.showRadix = true
 	}
 	if f[4] != "" {
-		r.minWidth, _ = strconv.ParseUint(f[4], 10, 64)
+		r.minWidth = f[4]
 	}
 	if f[5] != "" {
-		r.precision, _ = strconv.ParseUint(f[5], 10, 64)
+		r.precision = "." + f[5]
 	}
 	if f[6] != "" {
 		switch f[6] {
@@ -192,15 +182,16 @@ func (r *render) render() error {
 			prefix = "0o"
 		}
 	}
-	str := fmt.Sprintf(strings.Join([]string{"%", radix, verb}, ""), r.val)
+	str := fmt.Sprintf(strings.Join([]string{"%", r.sign, radix, r.minWidth, r.precision, verb}, ""), r.val)
 	if prefix != "" {
 		if str[0] == '-' {
 			str = strings.Join([]string{"-", prefix, str[1:]}, "")
+		} else if str[0] == '+' {
+			str = strings.Join([]string{"+", prefix, str[1:]}, "")
 		} else {
 			str = strings.Join([]string{prefix, str}, "")
 		}
 	}
-
 	r.buf.WriteString(str)
 	return nil
 }

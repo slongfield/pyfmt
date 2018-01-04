@@ -86,7 +86,9 @@ func (f *ff) doFormat(format string) error {
 			return err
 		}
 		f.r.clearFlags()
-		f.r.parseFlags(format)
+		if err = f.r.parseFlags(format); err != nil {
+			return err
+		}
 		if err = f.r.render(); err != nil {
 			return err
 		}

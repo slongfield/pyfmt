@@ -163,7 +163,7 @@ For integers:
   'X' - Hexadecimal, base 16, using upper-case letters
 ```
 
-For floats:
+For floats and complex numbers:
 
 ```
   'e' - Scientific notation
@@ -186,6 +186,5 @@ TODO(slongfield): Details on custom formatters.
 # TODOs
 
   *  Add support for alignment
-  *  Add support for complex number formatting
   *  Add support for custom formatters
   *  Add more tests.

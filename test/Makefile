@@ -1,7 +1,7 @@
 build/:
 	mkdir build
 
-build/libbridge.so: *.go build/
+build/libbridge.so: ../*.go *.go build/
 	go build -buildmode=c-shared -o $@
 
 build/__init__.py: *.py build/
