@@ -134,7 +134,7 @@ For integers:
   'x' - Hexadecimal, base 16
   'X' - Hexadecimal, base 16, using upper-case letters
 
-For floats:
+For floats and complex numbers:
 
   'e' - Scientific notation
   'E' - Similar to e, but uppercase
@@ -151,5 +151,11 @@ Examples
 TODO(slongfield): Add examples.
 
 TODO(slongfield): Details on custom formatters.
+
+TODOs
+
+  *  Add support for alignment
+  *  Add support for custom formatters
+  *  Add more tests.
 */
 package pyfmt
