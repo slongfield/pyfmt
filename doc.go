@@ -55,7 +55,8 @@ Is equivalent to:
 
   pyfmt.Must("{0} {1} {1}". ...)
 
-Accessing an element that's outside the list range will return an error or panic.
+Accessing an element that's outside the list range will return an error (with Fmt) or panic (with
+Must).
 
 The first element in the list is treated specially if it's a struct or a map with string keys,
 allowing the elements from that struct or map can be directly accessed. For instance:
@@ -66,7 +67,7 @@ returns
 
   "5".
 
-Attempting to read from an undefined key will return an error.
+and for structs:
 
   pyfmt.Must("{test}": myStruct{test: 5})
 
@@ -74,9 +75,13 @@ returns
 
  "5".
 
+Attempting to read from an undefined key will return an error or panic, depending on if it was
+accessed with Fmt or Must..
+
 Compound field names:
 
-If the value referenced by the field is itself a List, map[string]interface{}, or struct, it can be further accessed in the format string.
+If the value referenced by the field is itself a List, map[string]interface{}, or struct, it can be
+further accessed in the format string.
 
 Lists are accessed with square brackets:
 
@@ -119,7 +124,7 @@ If # is present, when using the binary, octal, or hex types, a '0b', '0o', or '0
 prepended, respectively.
 
 The minimumwidth field specifies a minimum width, which is helpful when used with alignment. If
-preceeded with a zero, numbers will be zero-padded.
+preceded with a zero, numbers will be zero-padded.
 
 The precision field specifies a maximum width for non-floating point, non-integer types, and the
 number of points to show after the decimal point for floating types.
@@ -145,6 +150,25 @@ For floats and complex numbers:
   'G' - Similar to g, but uses capital letters
   '%' - Percentage, multiplies the number by 100 and displays it with a '%' sign. Can also be
         applied to integer types.
+
+Special Formatting Types
+
+For some types (most notably structs), the default formatter doesn't quite give enough
+information to understand the value after its printed, so it's useful to get more accurate Go
+representations. Additionally, sometimes it's useful to print the type of a variable while
+formatting it. For these, pyfmt allows for some special formatting types that aren't in the
+Python format syntax.
+
+  'r' - convert the value to its Go-syntax representation
+  't' - convert the value to its Go type
+  's' - if printing a struct, print the struct field names
+
+These are equivalent to the `%#v`, `%T` and `%+v` format strings in the "fmt" package.
+
+Custom formatters
+
+Internally, pyfmt uses Go's fmt package, so existing types satisfying those Formatter, GoStringer,
+or Stringer interfaces will use those implementations as appropriate.
 
 Examples
 

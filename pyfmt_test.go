@@ -62,11 +62,13 @@ func TestSingleFormat(t *testing.T) {
 	}{
 		// String tests
 		{"{}", "☺", "☺"},
+		{"{:t}", "", "string"},
 
 		// Integer tests
 		{"{}", 42, "42"},
 		{"{:+#b}", 99, "+0b1100011"},
 		{"{: x}", 66, " 42"},
+		{"{:t}", 66, "int"},
 
 		// Float tests
 
@@ -74,6 +76,20 @@ func TestSingleFormat(t *testing.T) {
 		{"{}", 0i, "(0+0i)"},
 		{"{:3g}", 1 + 1i, "(  1 +1i)"},
 		{"{:+12.5g}", 1230000 - 0i, "(   +1.23e+06          +0i)"},
+
+		// Structs
+		{"{}", struct {
+			a int
+			b int
+		}{1, 2}, "{1 2}"},
+		{"{:r}", struct {
+			a int
+			b int
+		}{1, 2}, "struct { a int; b int }{a:1, b:2}"},
+		{"{:s}", struct {
+			a int
+			b int
+		}{1, 2}, "{a:1 b:2}"},
 	}
 
 	for _, test := range tests {
@@ -87,5 +103,4 @@ func TestSingleFormat(t *testing.T) {
 			t.Errorf(Must("Must({fmtStr}, {param}) = {1}, Want: {want}", test, got))
 		}
 	}
-
 }

@@ -31,6 +31,9 @@ const (
 	fix
 	fixCap
 	percent
+	repr
+	typerepr
+	structfield
 )
 
 type flags struct {
@@ -61,7 +64,7 @@ func (r *render) clearFlags() {
 	r.flags = flags{}
 }
 
-var flagPattern = regexp.MustCompile(`\A(.[<>=^]|[<>=^]?)([\+\- ]?)(#?)(\d*)\.?(\d*)([bdoxXeEfFgG%]?)\z`)
+var flagPattern = regexp.MustCompile(`\A(.[<>=^]|[<>=^]?)([\+\- ]?)(#?)(\d*)\.?(\d*)([bdoxXeEfFgGrts%]?)\z`)
 
 func (r *render) parseFlags(flags string) error {
 	if flags == "" {
@@ -131,6 +134,12 @@ func (r *render) parseFlags(flags string) error {
 			r.renderType = genCap
 		case "%":
 			r.renderType = percent
+		case "r":
+			r.renderType = repr
+		case "t":
+			r.renderType = typerepr
+		case "s":
+			r.renderType = structfield
 		default:
 			panic(Must("Unrechable. Saw type match {} not in regex.", f[6]))
 		}
@@ -170,6 +179,12 @@ func (r *render) render() error {
 	case percent:
 		// TODO(slongfield): Handle percent.
 		panic("Percent not yet handled.")
+	case repr:
+		verb = "#v"
+	case typerepr:
+		verb = "T"
+	case structfield:
+		verb = "+v"
 	default:
 		verb = "v"
 	}
