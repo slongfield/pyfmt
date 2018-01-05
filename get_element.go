@@ -124,7 +124,7 @@ func elementByName(name string, src interface{}) (interface{}, error) {
 	case reflect.Struct:
 		v := srcVal.FieldByName(name)
 		if v.IsValid() {
-			return elementFromValue(v), nil
+			return v, nil
 		}
 		return nil, Error("could not find field: {}", name)
 	case reflect.Map:
@@ -133,7 +133,7 @@ func elementByName(name string, src interface{}) (interface{}, error) {
 		}
 		v := srcVal.MapIndex(reflect.ValueOf(name))
 		if v.IsValid() {
-			return elementFromValue(v), nil
+			return v, nil
 		}
 		return nil, Error("could not find key: {}", name)
 	case reflect.Array, reflect.Slice:
@@ -141,7 +141,7 @@ func elementByName(name string, src interface{}) (interface{}, error) {
 			if parse < uint64(srcVal.Len()) {
 				v := srcVal.Index(int(parse))
 				if v.IsValid() {
-					return elementFromValue(v), nil
+					return v, nil
 				}
 				return nil, Error("could not get index: {}", name)
 			}
@@ -151,26 +151,4 @@ func elementByName(name string, src interface{}) (interface{}, error) {
 	default:
 		return nil, Error("attempted to get item by name from non-struct, non-map: {} {}", src, srcVal.Kind())
 	}
-}
-
-// elementFromValue will try to turn a reflect.Value into an interface{} when possible.
-// TODO(slongfield): Figure out if we can remove this. I think it's only needed for some of the
-// tests.
-func elementFromValue(val reflect.Value) interface{} {
-	if !val.IsValid() {
-		return nil
-	}
-	if val.CanInterface() {
-		return val.Interface()
-	}
-	// TODO(slongfield): Get a larger set of values.
-	switch val.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return int64(val.Int())
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return uint64(val.Uint())
-	case reflect.String:
-		return val.String()
-	}
-	return val
 }

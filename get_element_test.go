@@ -22,6 +22,26 @@ func nestedMap() map[string]map[string]map[string]int64 {
 	return m
 }
 
+// elementFromValue will try to turn a reflect.Value into an interface{} when possible.
+func elementFromValue(val reflect.Value) interface{} {
+	if !val.IsValid() {
+		return nil
+	}
+	if val.CanInterface() {
+		return val.Interface()
+	}
+	// TODO(slongfield): Get a larger set of values.
+	switch val.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return int64(val.Int())
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return uint64(val.Uint())
+	case reflect.String:
+		return val.String()
+	}
+	return val
+}
+
 func TestGetElement(t *testing.T) {
 	tests := []struct {
 		elems        []interface{}
@@ -46,6 +66,12 @@ func TestGetElement(t *testing.T) {
 		got, err := getElement(test.lookupStr, test.lookupOffset, test.elems...)
 		if err != nil {
 			t.Errorf("getElement(%v, %v, %v) Errored: %v", test.lookupStr, test.lookupOffset, test.elems, err)
+		}
+		// If we got a reflect.Value, pull out the underlying element. These print correctly, but
+		// reflect.DeepEqual doesn't like the unboxing.
+		switch got.(type) {
+		case reflect.Value:
+			got = elementFromValue(got.(reflect.Value))
 		}
 		if !reflect.DeepEqual(test.want, got) {
 			t.Errorf("getElement(%v, %v, %v) = %v Want: %v", test.lookupStr, test.lookupOffset, test.elems, got, test.want)
