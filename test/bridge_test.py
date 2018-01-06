@@ -20,7 +20,7 @@ def test_int(val, fmt_str):
 # some of the test cases don't work quite the same for float32 and float64.
 @pytest.mark.parametrize("val", [1.2, -1.2, 3.0 / 4.0, -1, 0, float('nan'), 2.0**20])
 @pytest.mark.parametrize("fmt_str", ["{:.6e}", "{:.6E}", "{:.6f}", "{:.6F}",
-                                     "{:.6g}", "{:.6G}"])
+                                     "{:.6g}", "{:.6G}", "{:.2%}"])
 def test_float(val, fmt_str):
     """Simple tests of float formatting."""
     gofmt = build.FormatOneFloat(fmt_str.encode("ascii"), val)
@@ -35,7 +35,7 @@ def test_float(val, fmt_str):
 @pytest.mark.parametrize("val", [1.2, -1.2, 3.0 / 4.0, 1.0 / 11.0, -1, 0, float('nan'), 2.1**20])
 @pytest.mark.parametrize("fmt_str", ["{:.6e}", "{:.6E}", "{:.6f}", "{:.6F}", "{:.6g}",
                                      "{:.6G}", "{:5.5f}", "{:+4.4e}", "{:-3.3g}",
-                                     "{: 1.7F}"])
+                                     "{: 1.7F}", "{:.3%}"])
 def test_double(val, fmt_str):
     """Simple tests of double formatting."""
     gofmt = build.FormatOneDouble(fmt_str.encode("ascii"), val)

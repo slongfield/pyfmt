@@ -30,7 +30,6 @@ func elementFromValue(val reflect.Value) interface{} {
 	if val.CanInterface() {
 		return val.Interface()
 	}
-	// TODO(slongfield): Get a larger set of values.
 	switch val.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return int64(val.Int())

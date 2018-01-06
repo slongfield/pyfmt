@@ -144,7 +144,7 @@ func (r *render) render() error {
 	var prefix, verb, radix string
 	var width int64
 	var err error
-	//TODO(slongfield): Consider doing this above.
+	//TODO(slongfield): Refactor into the above case statement.
 	switch r.renderType {
 	case binary:
 		verb = "b"
@@ -169,8 +169,17 @@ func (r *render) render() error {
 	case genCap:
 		verb = "G"
 	case percent:
-		// TODO(slongfield): Handle percent.
-		panic("Percent not yet handled.")
+		verb = "f"
+		// Increase the precision by two, to make sure we have enough digits.
+		if r.precision == "" {
+			r.precision = ".8"
+		} else {
+			precision, err := strconv.ParseInt(r.precision[1:], 10, 64)
+			if err != nil {
+				return err
+			}
+			r.precision = Must(".{}", precision+2)
+		}
 	case repr:
 		verb = "#v"
 	case typerepr:
@@ -205,6 +214,45 @@ func (r *render) render() error {
 			str = strings.Join([]string{"+", prefix, str[1:]}, "")
 		} else {
 			str = strings.Join([]string{prefix, str}, "")
+		}
+	}
+	// TODO(slongfield): Refactor--pull the percent formatting out and test it
+	// independently.
+	if r.renderType == percent {
+		parts := strings.SplitN(str, ".", 2)
+		var sign string
+		var suffix string
+		if len(parts) == 2 {
+			prefix, err := strconv.ParseInt(parts[0], 10, 64)
+			if err != nil {
+				return Error("Couldn't parse format prefix from: {}", str)
+			}
+			if prefix == 0 {
+				if parts[1][2:] != "" {
+					suffix = "." + parts[1][2:]
+				}
+				if parts[1][0] == '0' {
+					str = strings.Join([]string{sign, parts[1][1:2], suffix, "%"}, "")
+				} else {
+					str = strings.Join([]string{sign, parts[1][0:2], suffix, "%"}, "")
+				}
+			} else if len(parts[0]) == 1 {
+				if parts[1][2:] != "" {
+					suffix = "." + parts[1][2:]
+				}
+				str = strings.Join([]string{sign, parts[0], parts[1][0:2], suffix, "%"}, "")
+			} else {
+				if parts[1][2:] != "" {
+					suffix = "." + parts[1][2:]
+				}
+				str = strings.Join([]string{sign, parts[0], parts[1][0:2], suffix, "%"}, "")
+			}
+		} else {
+			if _, err := strconv.ParseInt(str, 10, 64); err != nil {
+				str = str + "%"
+			} else {
+				str = str + "00%"
+			}
 		}
 	}
 	r.buf.WriteAlignedString(str, r.align, width, r.fillChar)

@@ -208,6 +208,5 @@ TODO(slongfield): Details on custom formatters.
 
 # TODOs
 
-  *  Add support for alignment
   *  Add support for custom formatters
   *  Add more tests.

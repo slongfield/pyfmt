@@ -89,6 +89,11 @@ func TestSingleFormat(t *testing.T) {
 		{"{:=+4d}", 99, "+ 99"},
 
 		// Float tests
+		{"{:.0%}", 0.25, "25%"},
+		{"{:.1%}", 0.25, "25.0%"},
+		{"{:.3%}", 0.0, "0.000%"},
+		{"{:.0%}", -2.0, "-200%"},
+		{"{:.3%}", 1.2, "120.000%"},
 
 		// Complex numbers
 		{"{}", 0i, "(0+0i)"},
@@ -113,12 +118,12 @@ func TestSingleFormat(t *testing.T) {
 	for _, test := range tests {
 		defer func() {
 			if r := recover(); r != nil {
-				t.Errorf(Must("Must({fmtStr}, {param}) paniced: {1}", test, r))
+				t.Error(Must("Must({fmtStr}, {param}) paniced: {1}", test, r))
 			}
 		}()
 		got := Must(test.fmtStr, test.param)
 		if got != test.want {
-			t.Errorf(Must("Must({fmtStr}, {param}) = {1}, Want: {want}", test, got))
+			t.Error(Must("Must({fmtStr}, {param}) = {1}, Want: {want}", test, got))
 		}
 	}
 }
