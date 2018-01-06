@@ -141,8 +141,6 @@ func (r *render) render() error {
 			str = strings.Join([]string{prefix, str}, "")
 		}
 	}
-	// TODO(slongfield): Refactor--pull the percent formatting out and test it
-	// independently.
 	if r.percent {
 		str, err = transformPercent(str)
 		if err != nil {

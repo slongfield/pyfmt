@@ -14,3 +14,7 @@ def FormatOneFloat(fmt, a):
 
 def FormatOneDouble(fmt, a):
     return ffi.string(lib.FormatOneDouble(fmt, a))
+
+
+def FormatOneString(fmt, a):
+    return ffi.string(lib.FormatOneString(fmt, a))

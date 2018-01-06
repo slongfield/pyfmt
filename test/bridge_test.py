@@ -44,3 +44,12 @@ def test_double(val, fmt_str):
         assert gofmt.lower() == pyfmt.lower()
     else:
         assert gofmt == pyfmt
+
+
+@pytest.mark.parametrize("val", ["test", "asdf", "_" * 1000])
+@pytest.mark.parametrize("fmt_str", ["{}", "{0}{0}{0}", "{0}", "{:^1000}"])
+def test_string(val, fmt_str):
+    """Simple tests of string formatting."""
+    gofmt = build.FormatOneString(fmt_str.encode("ascii"), val.encode("ascii"))
+    pyfmt = fmt_str.format(val).encode("ascii")
+    assert gofmt == pyfmt
