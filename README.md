@@ -45,24 +45,6 @@ Is equivalent to
   pyfmt.Must("{0} {1} {2}", ...)
 ```
 
-so is
-
-```
-  pyfmt.Must("{} {1} {2}", ...)
-```
-
-but
-
-```
-  pyfmt.Must("{} {1} {}", ...)
-```
-
-Is equivalent to:
-
-```
-  pyfmt.Must("{0} {1} {1}". ...)
-```
-
 Accessing an element that's outside the list range will return an error (with Fmt) or panic (with
 Must).
 
@@ -70,25 +52,13 @@ The first element in the list is treated specially if it's a struct or a map wit
 allowing the elements from that struct or map can be directly accessed. For instance:
 
 ```
-  pyfmt.Must("{test}", map[string]int{"test": 5})
+  pyfmt.Must("{test}", map[string]int{"test": 5}) --> "5"
 ```
 
-returns
+similarly for structs:
 
 ```
-  "5".
-```
-
-and for structs:
-
-```
-  pyfmt.Must("{test}": myStruct{test: 5})
-```
-
-returns
-
-```
- "5".
+  pyfmt.Must("{test}": myStruct{test: 5}) --> "5"
 ```
 
 Attempting to read from an undefined key will return an error or panic, depending on if it was
@@ -102,27 +72,27 @@ further accessed in the format string.
 Lists are accessed with square brackets:
 
 ```
-  pyfmt.Must("{0[0]}", []string{"test"}) -> "test"
+  pyfmt.Must("{0[0]}", []string{"test"}) --> "test"
 ```
 
-Similarly, maps are accessed with square brackets:
+saimilarly, maps are accessed with square brackets:
 
 ```
-  pyfmt.Must("{0[test]}", map[string]interface{}{"test": "42"}) -> "42"
+  pyfmt.Must("{0[test]}", map[string]interface{}{"test": "42"}) --> "42"
 ```
 
-And struct fields are accessed with period, '.'
+and struct fields are accessed with period, '.'
 
 ```
-  pyfmt.Must("{foo.bar.baz}", MyStruct{foo: Foo{bar: Bar{baz: "test"}}}) -> "test"
+  pyfmt.Must("{foo.bar.baz}", MyStruct{foo: Foo{bar: Bar{baz: "test"}}}) --> "test"
 ```
 
 # Formatting
 
-If after a field name, there's a ':', what follows is considered to be the format specifier. If a
-type satisfies the PyFormat interface (discussed below), the format specifier will be passed to that,
-but otherwise, it will fall back to the default formatter, which expects the standard format
-specifier:
+If after a simple or complex field name, there's a ':', what follows is considered to be the format
+specifier. If a type satisfies the PyFormat interface (discussed below), the format specifier will
+be passed to that, but otherwise, it will fall back to the default formatter, which expects the
+standard format specifier:
 
 ```
   [[fill]align][sign][#][0][minimumwidth][.precision][type]
