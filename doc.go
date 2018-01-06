@@ -99,7 +99,7 @@ And struct fields are accessed with period, '.'
 Formatting
 
 If after a field name, there's a ':', what follows is considered to be the format specifier. If a
-type satisfies the Format interface (discussed below), the format specifier will be passed to that,
+type satisfies the PyFormat interface (discussed below), the format specifier will be passed to that,
 but otherwise, it will fall back to the default formatter, which expects the standard format
 specifier:
 
@@ -170,15 +170,18 @@ Custom formatters
 Internally, pyfmt uses Go's fmt package, so existing types satisfying those Formatter, GoStringer,
 or Stringer interfaces will use those implementations as appropriate.
 
+If the type satisfies the PyFormatter interface, the format specifier will be passed to that
+function, for custom formatting. Due to the limits of Golang reflection, if accessing a struct
+sub-field that has a custom formatter, the struct field must be exported for pyfmt to access the
+custom Formatter. This is similar to the default 'fmt' package, which doesn't apply custom Stringer
+implementations to unexported struct fields.
+
 Examples
 
 TODO(slongfield): Add examples.
 
-TODO(slongfield): Details on custom formatters.
-
 TODOs
 
-  *  Add support for custom formatters
   *  Add more tests.
 */
 package pyfmt

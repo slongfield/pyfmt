@@ -124,6 +124,9 @@ func elementByName(name string, src interface{}) (interface{}, error) {
 	case reflect.Struct:
 		v := srcVal.FieldByName(name)
 		if v.IsValid() {
+			if v.CanInterface() {
+				return v.Interface(), nil
+			}
 			return v, nil
 		}
 		return nil, Error("could not find field: {}", name)
@@ -133,6 +136,9 @@ func elementByName(name string, src interface{}) (interface{}, error) {
 		}
 		v := srcVal.MapIndex(reflect.ValueOf(name))
 		if v.IsValid() {
+			if v.CanInterface() {
+				return v.Interface(), nil
+			}
 			return v, nil
 		}
 		return nil, Error("could not find key: {}", name)
@@ -141,6 +147,9 @@ func elementByName(name string, src interface{}) (interface{}, error) {
 			if parse < uint64(srcVal.Len()) {
 				v := srcVal.Index(int(parse))
 				if v.IsValid() {
+					if v.CanInterface() {
+						return v.Interface(), nil
+					}
 					return v, nil
 				}
 				return nil, Error("could not get index: {}", name)

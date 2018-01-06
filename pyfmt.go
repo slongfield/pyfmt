@@ -128,12 +128,20 @@ func (f *ff) doFormat(format string) error {
 		if err != nil {
 			return err
 		}
-		f.r.clearFlags()
-		if err = f.r.parseFlags(format); err != nil {
-			return err
-		}
-		if err = f.r.render(); err != nil {
-			return err
+		if formatter, ok := f.r.val.(PyFormatter); ok {
+			formatted, err := formatter.PyFormat(format)
+			if err != nil {
+				return err
+			}
+			f.buf.WriteString(formatted)
+		} else {
+			f.r.clearFlags()
+			if err = f.r.parseFlags(format); err != nil {
+				return err
+			}
+			if err = f.r.render(); err != nil {
+				return err
+			}
 		}
 		i++
 	}
@@ -185,4 +193,12 @@ func Error(format string, a ...interface{}) error {
 		return Error("error formatting {}: {}", s, err)
 	}
 	return errors.New(s)
+}
+
+// PyFormatter is an interface implemented with a PyFormat method that allows for a custom
+// formatter.
+// The PyFormat method is used to process a custom format spec and then create a formatted version
+// of the type based on that.
+type PyFormatter interface {
+	PyFormat(f string) (string, error)
 }

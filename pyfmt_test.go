@@ -1,6 +1,8 @@
 package pyfmt
 
 import (
+	"errors"
+	"strconv"
 	"testing"
 )
 
@@ -50,6 +52,19 @@ func TestBasicFormat(t *testing.T) {
 			t.Error(Must("Must({fmtStr}, {params}) = {1}, Want: {want}", test, got))
 		}
 	}
+}
+
+type custom int
+
+func (c custom) PyFormat(format string) (string, error) {
+	if format == "test" {
+		return "test format", nil
+	}
+	if format == "error" {
+		return "", errors.New("Custom formatter error.")
+	}
+	str := strconv.Itoa(int(c))
+	return Fmt("__{}:{}__", format, str)
 }
 
 // Tests formatting individual values of various types.
@@ -113,6 +128,13 @@ func TestSingleFormat(t *testing.T) {
 			a int
 			b int
 		}{1, 2}, "{a:1 b:2}"},
+
+		// Custom formatter
+		{"{:test}", custom(99), "test format"},
+		{"{:asdf}", custom(3), "__asdf:3__"},
+		{"{0[0]:1234}", []custom{99}, "__1234:99__"},
+		{"{Test:test}", struct{ Test custom }{Test: 3}, "test format"},
+		{"{Test:1234}", struct{ Test custom }{Test: 3}, "__1234:3__"},
 	}
 
 	for _, test := range tests {
