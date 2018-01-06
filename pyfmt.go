@@ -44,7 +44,7 @@ func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar r
 		b.WriteString(strings.Repeat(fill, int(prePad)))
 		b.WriteString(s)
 		b.WriteString(strings.Repeat(fill, int(width-length-prePad)))
-	// TODO(slongfield): padSign is only valid if we had formatted a
+	// TODO(slongfield): padSign is only valid if we had formatted a number.
 	case padSign:
 		if s[0] == '-' || s[0] == '+' {
 			b.WriteString(string(s[0]))

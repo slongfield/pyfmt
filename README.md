@@ -1,6 +1,6 @@
 # pyfmt
 
-pyfmt implements Python-style advanced string formatting.
+pyfmt implements Python's advanced string formatting in Golang.
 
 This is an alternative to the `fmt` package's Sprintf-style string formatting, and mimics the
 .format() style formatting available in Python >2.6. Under the hood, it still uses the go 'fmt'
@@ -160,11 +160,14 @@ to understand the value after its printed, so it's useful to get more accurate G
 Additionally, sometimes it's useful to print the type of a variable while formatting it. For these,
 pyfmt allows for some special formatting types that aren't in the Python format syntax.
 
+```
   'r' - convert the value to its Go-syntax representation
   't' - convert the value to its Go type
   's' - if printing a struct, print the struct field names
+```
 
-These are equivalent to the `%#v`, `%T` and `%+v` format strings in the "fmt" package.
+These are equivalent to the `%#v`, `%T` and `%+v` format strings in the "fmt" package, but don't
+have an exact equivalent in Python.
 
 # Custom formatters
 

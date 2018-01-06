@@ -17,7 +17,6 @@ import (
 //   '[{id}]' to look up the name as above,
 // - if the 'name' contains a '.' use the above lookup rules on the part before the dot to look up
 //   an element, and then follow the rules as above.
-//
 func getElement(name string, offset int, elems ...interface{}) (interface{}, error) {
 	if len(elems) == 0 {
 		return nil, Error("attempted to fetch {}/{} from empty list", name, offset)
@@ -110,7 +109,9 @@ func splitName(name string) ([]string, error) {
 	return subNames, nil
 }
 
-// elementByName will get the element by name if it's a strut or map, and error out otherwise.
+// elementByName will get the element by name if it's a struct or map, the an element by number
+// from an Array or Slice, and error out otherwise. If possible, will return an interface{} value,
+// but may return a reflect.Value if it cannot be interfaced (e.g., for unexported struct fields)
 func elementByName(name string, src interface{}) (interface{}, error) {
 	var srcVal reflect.Value
 	switch src.(type) {

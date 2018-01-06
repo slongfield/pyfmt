@@ -67,6 +67,12 @@ func (c custom) PyFormat(format string) (string, error) {
 	return Fmt("__{}:{}__", format, str)
 }
 
+type stringer int
+
+func (s stringer) String() string {
+	return "custom stringer"
+}
+
 // Tests formatting individual values of various types.
 // TODO(slongfield): Add more tests.
 func TestSingleFormat(t *testing.T) {
@@ -135,6 +141,15 @@ func TestSingleFormat(t *testing.T) {
 		{"{0[0]:1234}", []custom{99}, "__1234:99__"},
 		{"{Test:test}", struct{ Test custom }{Test: 3}, "test format"},
 		{"{Test:1234}", struct{ Test custom }{Test: 3}, "__1234:3__"},
+		// Custom formatters don't work in unexported struct variables
+		{"{test}", struct{ test custom }{test: 1234}, "1234"},
+
+		// Custom fmt.Stringer
+		{"{}", stringer(3), "custom stringer"},
+		{"{0[0]}", []stringer{99}, "custom stringer"},
+		{"{Test}", struct{ Test stringer }{Test: 42}, "custom stringer"},
+		// Custom stringers don't work in unexported struct variables.
+		{"{test}", struct{ test stringer }{test: 6789}, "6789"},
 	}
 
 	for _, test := range tests {
