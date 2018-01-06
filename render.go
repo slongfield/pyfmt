@@ -107,15 +107,8 @@ func (r *render) render() error {
 	var width int64
 	var err error
 	if r.percent {
-		// Increase the precision by two, to make sure we have enough digits.
-		if r.precision == "" {
-			r.precision = ".8"
-		} else {
-			precision, err := strconv.ParseInt(r.precision[1:], 10, 64)
-			if err != nil {
-				return err
-			}
-			r.precision = Must(".{}", precision+2)
+		if err = r.setupPercent(); err != nil {
+			return err
 		}
 	}
 	if r.showRadix {
@@ -149,42 +142,61 @@ func (r *render) render() error {
 	// TODO(slongfield): Refactor--pull the percent formatting out and test it
 	// independently.
 	if r.percent {
-		parts := strings.SplitN(str, ".", 2)
-		var sign string
-		var suffix string
-		if len(parts) == 2 {
-			prefix, err := strconv.ParseInt(parts[0], 10, 64)
-			if err != nil {
-				return Error("Couldn't parse format prefix from: {}", str)
-			}
-			if prefix == 0 {
-				if parts[1][2:] != "" {
-					suffix = "." + parts[1][2:]
-				}
-				if parts[1][0] == '0' {
-					str = strings.Join([]string{sign, parts[1][1:2], suffix, "%"}, "")
-				} else {
-					str = strings.Join([]string{sign, parts[1][0:2], suffix, "%"}, "")
-				}
-			} else if len(parts[0]) == 1 {
-				if parts[1][2:] != "" {
-					suffix = "." + parts[1][2:]
-				}
-				str = strings.Join([]string{sign, parts[0], parts[1][0:2], suffix, "%"}, "")
-			} else {
-				if parts[1][2:] != "" {
-					suffix = "." + parts[1][2:]
-				}
-				str = strings.Join([]string{sign, parts[0], parts[1][0:2], suffix, "%"}, "")
-			}
-		} else {
-			if _, err := strconv.ParseInt(str, 10, 64); err != nil {
-				str = str + "%"
-			} else {
-				str = str + "00%"
-			}
+		str, err = transformPercent(str)
+		if err != nil {
+			return err
 		}
 	}
 	r.buf.WriteAlignedString(str, r.align, width, r.fillChar)
 	return nil
+}
+
+func (r *render) setupPercent() error {
+	// Increase the precision by two, to make sure we have enough digits.
+	if r.precision == "" {
+		r.precision = ".8"
+	} else {
+		precision, err := strconv.ParseInt(r.precision[1:], 10, 64)
+		if err != nil {
+			return err
+		}
+		r.precision = Must(".{}", precision+2)
+	}
+	return nil
+}
+
+func transformPercent(p string) (string, error) {
+	parts := strings.SplitN(p, ".", 2)
+	var sign string
+	var suffix string
+	if len(parts) == 2 {
+		prefix, err := strconv.ParseInt(parts[0], 10, 64)
+		if err != nil {
+			return "", Error("Couldn't parse format prefix from: {}", p)
+		}
+		if prefix == 0 {
+			if parts[1][2:] != "" {
+				suffix = "." + parts[1][2:]
+			}
+			if parts[1][0] == '0' {
+				return strings.Join([]string{sign, parts[1][1:2], suffix, "%"}, ""), nil
+			} else {
+				return strings.Join([]string{sign, parts[1][0:2], suffix, "%"}, ""), nil
+			}
+		} else if len(parts[0]) == 1 {
+			if parts[1][2:] != "" {
+				suffix = "." + parts[1][2:]
+			}
+			return strings.Join([]string{sign, parts[0], parts[1][0:2], suffix, "%"}, ""), nil
+		}
+		if parts[1][2:] != "" {
+			suffix = "." + parts[1][2:]
+		}
+		return strings.Join([]string{sign, parts[0], parts[1][0:2], suffix, "%"}, ""), nil
+	}
+	if _, err := strconv.ParseInt(p, 10, 64); err != nil {
+		return p + "%", nil
+	}
+	return p + "00%", nil
+
 }
