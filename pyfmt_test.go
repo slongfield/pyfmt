@@ -2,7 +2,9 @@ package pyfmt
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -163,4 +165,44 @@ func TestSingleFormat(t *testing.T) {
 			t.Error(Must("Must({fmtStr}, {param}) = {1}, Want: {want}", test, got))
 		}
 	}
+}
+
+func BenchmarkPrintEmptyParallel(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			Must("")
+		}
+	})
+}
+
+func BenchmarkFmtForComparison(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			fmt.Sprintf("")
+		}
+	})
+}
+
+func BenchmarkCenteredParallel(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			Must("{:^100}", "test")
+		}
+	})
+}
+
+func BenchmarkLargeString(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			Must(strings.Repeat("{0}", 1000), "test")
+		}
+	})
+}
+
+func BenchmarkFmtLargeString(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			fmt.Sprintf(strings.Repeat("%[0]v", 1000), "test")
+		}
+	})
 }

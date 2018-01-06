@@ -3,6 +3,7 @@ package pyfmt
 import (
 	"errors"
 	"strings"
+	"sync"
 )
 
 // Using a simple []byte instead of bytes.Buffer to avoid the dependency.
@@ -61,7 +62,7 @@ const (
 	useStruct
 )
 
-// ff is used to store a formatter's state.
+// ff is used to store a formatter's state and is reused iwth sync.Pool to avoid allocations.
 type ff struct {
 	buf buffer
 
@@ -73,13 +74,23 @@ type ff struct {
 	r render
 }
 
+var ffFree = sync.Pool{
+	New: func() interface{} { return new(ff) },
+}
+
 // newFormater creates a new ff struct.
-// TODO(slongfield): Investigate using a sync.Pool to avoid reallocation.
 func newFormater() *ff {
-	f := ff{}
+	f := ffFree.Get().(*ff)
 	f.listPos = 0
 	f.r.init(&f.buf)
-	return &f
+	return f
+}
+
+func (f *ff) free() {
+	f.buf = f.buf[:0]
+	f.args = f.args[:0]
+	f.listPos = 0
+	ffFree.Put(f)
 }
 
 // doFormat parses the string, and executes a format command. Stores the output in ff's buf.
@@ -168,6 +179,7 @@ func (f *ff) getArg(argName string) (interface{}, error) {
 // to use in formatting, and substitutes them.
 func Fmt(format string, a ...interface{}) (string, error) {
 	f := newFormater()
+	defer f.free()
 	f.args = a
 	err := f.doFormat(format)
 	if err != nil {
