@@ -42,12 +42,12 @@ func TestBasicFormat(t *testing.T) {
 	for _, test := range tests {
 		defer func() {
 			if r := recover(); r != nil {
-				t.Errorf(Must("Must({fmtStr}, {params}) paniced: {1}", test, r))
+				t.Error(Must("Must({fmtStr}, {params}) paniced: {1}", test, r))
 			}
 		}()
 		got := Must(test.fmtStr, test.params...)
 		if got != test.want {
-			t.Errorf(Must("Must({fmtStr}, {params}) = {1}, Want: {want}", test, got))
+			t.Error(Must("Must({fmtStr}, {params}) = {1}, Want: {want}", test, got))
 		}
 	}
 }

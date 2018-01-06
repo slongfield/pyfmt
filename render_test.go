@@ -25,16 +25,16 @@ func TestParseFlags(t *testing.T) {
 	for _, test := range tests {
 		defer func() {
 			if r := recover(); r != nil {
-				t.Errorf("parseFlags(%v) paniced: %v", test.flagStr, r)
+				t.Error("parseFlags(%v) paniced: %v", test.flagStr, r)
 			}
 		}()
 		r := render{}
 		err := r.parseFlags(test.flagStr)
 		if err != nil {
-			t.Errorf("parseFlags(%v) Errored: %v", test.flagStr, err)
+			t.Error("parseFlags(%v) Errored: %v", test.flagStr, err)
 		}
 		if !reflect.DeepEqual(test.want, r.flags) {
-			t.Errorf("parseFlags(%v) Got: %v Want %v", test.flagStr, r.flags, test.want)
+			t.Error("parseFlags(%v) Got: %v Want %v", test.flagStr, r.flags, test.want)
 		}
 	}
 }
@@ -52,16 +52,16 @@ func TestParseFlagsError(t *testing.T) {
 	for _, test := range tests {
 		defer func() {
 			if r := recover(); r != nil {
-				t.Errorf("parseFlags(%v) paniced: %v", test.flagStr, r)
+				t.Error("parseFlags(%v) paniced: %v", test.flagStr, r)
 			}
 		}()
 		r := render{}
 		err := r.parseFlags(test.flagStr)
 		if err == nil {
-			t.Errorf("parseFlags(%v) did not raise an error", test.flagStr)
+			t.Error("parseFlags(%v) did not raise an error", test.flagStr)
 		}
 		if !strings.Contains(err.Error(), test.want) {
-			t.Errorf("parseFlags(%v) raised %v, missing want string %v", test.flagStr, err, test.want)
+			t.Error("parseFlags(%v) raised %v, missing want string %v", test.flagStr, err, test.want)
 		}
 	}
 
