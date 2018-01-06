@@ -15,10 +15,10 @@ use, and a 'format specifier', which indicates how to format that item.
 
 # Functions
 
-pyfmt implements three functions, 'Fmt', 'Must', and 'Error'. 'Fmt' formats, but may return
-an error as detailed below. 'Must' formats, but will panic when 'Fmt' would return an error, and
-'Error' acts like 'Fmt', but returns an error type. In the event that there's an error formatting
-the error, 'Error' includes the format error and as much of the formatted string as possible.
+pyfmt implements three functions, 'Fmt', 'Must', and 'Error'. 'Fmt' formats, but may return an error
+as detailed below. 'Must' formats, but will panic when 'Fmt' would return an error, and 'Error' acts
+like 'Fmt', but returns an error type. In the event that there's an error formatting the error,
+'Error' includes the format error and as much of the formatted string as possible.
 
 All of them take a format string, and then a list of arguments to look up elements from.
 
@@ -30,9 +30,9 @@ you call.
 
 ## Simple field names:
 
-The simplest look up treats the argument list as just a list. There are two possible ways to look
-up elements from this list. First, by {}, which gets the 'next' item, and second, by {n}, which
-gets the nth item. Accessing these two ways is independent, so while
+The simplest look up treats the argument list as just a list. There are two possible ways to look up
+elements from this list. First, by {}, which gets the 'next' item, and second, by {n}, which gets
+the nth item. Accessing these two ways is independent, so while
 
 ```
   pyfmt.Must("{} {} {}", ...)
@@ -91,7 +91,7 @@ returns
 ```
 
 Attempting to read from an undefined key will return an error or panic, depending on if it was
-accessed with Fmt or Must..
+accessed with Fmt or Must.
 
 ## Compound field names:
 
@@ -184,11 +184,10 @@ For floats and complex numbers:
 
 ## Special Formatting Types
 
-For some types (most notably structs), the default formatter doesn't quite give enough
-information to understand the value after its printed, so it's useful to get more accurate Go
-representations. Additionally, sometimes it's useful to print the type of a variable while
-formatting it. For these, pyfmt allows for some special formatting types that aren't in the
-Python format syntax.
+For some types (most notably structs), the default formatter doesn't quite give enough information
+to understand the value after its printed, so it's useful to get more accurate Go representations.
+Additionally, sometimes it's useful to print the type of a variable while formatting it. For these,
+pyfmt allows for some special formatting types that aren't in the Python format syntax.
 
   'r' - convert the value to its Go-syntax representation
   't' - convert the value to its Go type

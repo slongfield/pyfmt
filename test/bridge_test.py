@@ -7,7 +7,7 @@ import pytest
 
 @pytest.mark.parametrize("val", [42, -10, 100000, 0, 2**31 - 1])
 @pytest.mark.parametrize("fmt_str", ["{}", "{:b}", "{:x}", "{:d}", "{:X}", "{:#x}", "{:#X}",
-                                     "{:#d}", "{:#b}", "{:#o}"])
+                                     "{:#d}", "{:#b}", "{:#o}", "{:<10x}", "{:+^7x}"])
 def test_int(val, fmt_str):
     """Simple tests of integer fomatting."""
     gofmt = build.FormatOneInt(fmt_str.encode("ascii"), val)

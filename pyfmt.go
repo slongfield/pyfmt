@@ -13,6 +13,43 @@ func (b *buffer) WriteString(s string) {
 }
 
 const (
+	noAlign = iota
+	left
+	right
+	padSign
+	center
+)
+
+func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar rune) {
+	length := int64(len(s))
+	if length >= width {
+		b.WriteString(s)
+		return
+	}
+	var fill string
+	if fillChar == 0 {
+		fill = " "
+	} else {
+		fill = string(fillChar)
+	}
+	switch align {
+	case noAlign:
+		b.WriteString(s)
+	case right:
+		b.WriteString(strings.Repeat(fill, int(width-length)))
+		b.WriteString(s)
+	case left:
+		b.WriteString(s)
+		b.WriteString(strings.Repeat(fill, int(width-length)))
+	case center:
+		prePad := (width - length) / 2
+		b.WriteString(strings.Repeat(fill, int(prePad)))
+		b.WriteString(s)
+		b.WriteString(strings.Repeat(fill, int(width-length-prePad)))
+	}
+}
+
+const (
 	useMap = iota
 	useList
 	useStruct

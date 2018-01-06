@@ -9,16 +9,9 @@ import (
 	"unicode/utf8"
 )
 
-const (
-	left = iota
-	right
-	padSign
-	center
-)
-
 // Verb types.
 const (
-	none = iota
+	noVerb = iota
 	decimal
 	binary
 	octal
@@ -149,9 +142,9 @@ func (r *render) parseFlags(flags string) error {
 
 func (r *render) render() error {
 	//TODO(slongfield): Create the format string.
-	var prefix string
-	var verb string
-	var radix string
+	var prefix, verb, radix string
+	var width int64
+	var err error
 	//TODO(slongfield): Consider doing this above.
 	switch r.renderType {
 	case binary:
@@ -197,6 +190,17 @@ func (r *render) render() error {
 			prefix = "0o"
 		}
 	}
+	if r.align != noAlign {
+		width, err = strconv.ParseInt(r.minWidth, 10, 64)
+		if err != nil {
+			return Error("Can't convert width {} to int", r.minWidth)
+		}
+		r.minWidth = ""
+	}
+	// Padding with leading zeros is directly supported by Go's formatting library.
+	if r.align == padSign {
+		panic("Cannot pad sign yet.")
+	}
 	str := fmt.Sprintf(strings.Join([]string{"%", r.sign, radix, r.minWidth, r.precision, verb}, ""), r.val)
 	if prefix != "" {
 		if str[0] == '-' {
@@ -207,7 +211,7 @@ func (r *render) render() error {
 			str = strings.Join([]string{prefix, str}, "")
 		}
 	}
-	r.buf.WriteString(str)
+	r.buf.WriteAlignedString(str, r.align, width, r.fillChar)
 	return nil
 }
 
