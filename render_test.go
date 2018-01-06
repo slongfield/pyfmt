@@ -11,14 +11,15 @@ func TestParseFlags(t *testing.T) {
 		flagStr string
 		want    flags
 	}{
-		{"", flags{}},
-		{">>", flags{fillChar: '>', align: right}},
-		{">10.10", flags{align: right, minWidth: "10", precision: ".10"}},
-		{"#x", flags{showRadix: true, renderType: hex}},
-		{"#X", flags{showRadix: true, renderType: hexCap}},
+		{"", flags{renderVerb: "v"}},
+		{">>", flags{fillChar: '>', align: right, renderVerb: "v"}},
+		{">10.10", flags{align: right, minWidth: "10", precision: ".10", renderVerb: "v"}},
+		{"#x", flags{showRadix: true, renderVerb: "x"}},
+		{"#X", flags{showRadix: true, renderVerb: "X"}},
 		// Neg sign doesn't get picked up.
-		{"-.4o", flags{precision: ".4", sign: "", renderType: octal}},
-		{"+.4o", flags{precision: ".4", sign: "+", renderType: octal}},
+		{"-.4o", flags{precision: ".4", sign: "", renderVerb: "o"}},
+		{"+.4o", flags{precision: ".4", sign: "+", renderVerb: "o"}},
+		{"r", flags{renderVerb: "#v"}},
 	}
 
 	for _, test := range tests {

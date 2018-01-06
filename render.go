@@ -9,26 +9,6 @@ import (
 	"unicode/utf8"
 )
 
-// Verb types.
-const (
-	noVerb = iota
-	decimal
-	binary
-	octal
-	hex
-	hexCap
-	gen
-	genCap
-	sci
-	sciCap
-	fix
-	fixCap
-	percent
-	repr
-	typerepr
-	structfield
-)
-
 type flags struct {
 	fillChar   rune
 	align      int
@@ -36,7 +16,8 @@ type flags struct {
 	showRadix  bool
 	minWidth   string
 	precision  string
-	renderType int
+	renderVerb string
+	percent    bool
 }
 
 // Render is the renderer used to render dispatched format strings into a buffer that's been set up
@@ -60,6 +41,7 @@ func (r *render) clearFlags() {
 var flagPattern = regexp.MustCompile(`\A(.[<>=^]|[<>=^]?)([\+\- ]?)(#?)(\d*)\.?(\d*)([bdoxXeEfFgGrts%]?)\z`)
 
 func (r *render) parseFlags(flags string) error {
+	r.renderVerb = "v"
 	if flags == "" {
 		return nil
 	}
@@ -103,73 +85,29 @@ func (r *render) parseFlags(flags string) error {
 	}
 	if f[6] != "" {
 		switch f[6] {
-		case "b":
-			r.renderType = binary
-		case "d":
-			r.renderType = decimal
-		case "o":
-			r.renderType = octal
-		case "x":
-			r.renderType = hex
-		case "X":
-			r.renderType = hexCap
-		case "e":
-			r.renderType = sci
-		case "E":
-			r.renderType = sciCap
-		case "f":
-			r.renderType = fix
-		case "F":
-			r.renderType = fixCap
-		case "g":
-			r.renderType = gen
-		case "G":
-			r.renderType = genCap
+		case "b", "d", "o", "x", "X", "e", "E", "f", "F", "g", "G":
+			r.renderVerb = f[6]
 		case "%":
-			r.renderType = percent
+			r.percent = true
+			r.renderVerb = "f"
 		case "r":
-			r.renderType = repr
+			r.renderVerb = "#v"
 		case "t":
-			r.renderType = typerepr
+			r.renderVerb = "T"
 		case "s":
-			r.renderType = structfield
+			r.renderVerb = "+v"
 		default:
-			panic(Must("Unrechable. Saw type match {} not in regex.", f[6]))
+			panic("Unreachable, this should never happen. Flag parsing regex is corrupted.")
 		}
 	}
 	return nil
 }
 
 func (r *render) render() error {
-	var prefix, verb, radix string
+	var prefix, radix string
 	var width int64
 	var err error
-	//TODO(slongfield): Refactor into the above case statement.
-	switch r.renderType {
-	case binary:
-		verb = "b"
-	case decimal:
-		verb = "d"
-	case octal:
-		verb = "o"
-	case hex:
-		verb = "x"
-	case hexCap:
-		verb = "X"
-	case sci:
-		verb = "e"
-	case sciCap:
-		verb = "E"
-	case fix:
-		verb = "f"
-	case fixCap:
-		verb = "F"
-	case gen:
-		verb = "g"
-	case genCap:
-		verb = "G"
-	case percent:
-		verb = "f"
+	if r.percent {
 		// Increase the precision by two, to make sure we have enough digits.
 		if r.precision == "" {
 			r.precision = ".8"
@@ -180,21 +118,13 @@ func (r *render) render() error {
 			}
 			r.precision = Must(".{}", precision+2)
 		}
-	case repr:
-		verb = "#v"
-	case typerepr:
-		verb = "T"
-	case structfield:
-		verb = "+v"
-	default:
-		verb = "v"
 	}
 	if r.showRadix {
-		if r.renderType == hex || r.renderType == hexCap {
+		if r.renderVerb == "x" || r.renderVerb == "X" {
 			radix = "#"
-		} else if r.renderType == binary {
+		} else if r.renderVerb == "b" {
 			prefix = "0b"
-		} else if r.renderType == octal {
+		} else if r.renderVerb == "o" {
 			prefix = "0o"
 		}
 	}
@@ -205,7 +135,8 @@ func (r *render) render() error {
 		}
 		r.minWidth = ""
 	}
-	str := fmt.Sprintf(strings.Join([]string{"%", r.sign, radix, r.minWidth, r.precision, verb}, ""), r.val)
+	str := fmt.Sprintf(strings.Join([]string{
+		"%", r.sign, radix, r.minWidth, r.precision, r.renderVerb}, ""), r.val)
 	// TODO(slongfield): Add an assertion here that we're operating on a numeric type.
 	if prefix != "" {
 		if str[0] == '-' {
@@ -218,7 +149,7 @@ func (r *render) render() error {
 	}
 	// TODO(slongfield): Refactor--pull the percent formatting out and test it
 	// independently.
-	if r.renderType == percent {
+	if r.percent {
 		parts := strings.SplitN(str, ".", 2)
 		var sign string
 		var suffix string
