@@ -32,14 +32,14 @@ names build off of simple names.
 ## Simple field names:
 
 The simplest look up treats the argument list as just a list. There are two possible ways to look up
-elements from this list. First, by {}, which gets the 'next' item, and second, by {n}, which gets
-the nth item. Accessing these two ways is independent, so while
+elements from this list. First, by {}, which gets the 'next' item and by {n}, which gets the nth
+item. Accessing these two ways is independent, and
 
 ```
   pyfmt.Must("{} {} {}", ...)
 ```
 
-Is equivalent to
+is equivalent to
 
 ```
   pyfmt.Must("{0} {1} {2}", ...)
@@ -176,10 +176,6 @@ function, for custom formatting. Due to the limits of Golang reflection, if acce
 sub-field that has a custom formatter, the struct field must be exported for pyfmt to access the
 custom Formatter. This is similar to the default 'fmt' package, which doesn't apply custom Stringer
 implementations to unexported struct fields.
-
-# Examples
-
-TODO(slongfield): Add examples.
 
 # TODOs
 
