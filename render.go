@@ -102,6 +102,8 @@ func (r *render) parseFlags(flags string) error {
 	return nil
 }
 
+// render renders a single element by passing that element and the translated format string
+// into the fmt formatter.
 func (r *render) render() error {
 	var prefix, radix string
 	var width int64

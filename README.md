@@ -3,7 +3,9 @@
 pyfmt implements Python-style advanced string formatting.
 
 This is an alternative to the `fmt` package's Sprintf-style string formatting, and mimics the
-.format() style formatting available in Python >2.6.
+.format() style formatting available in Python >2.6. Under the hood, it still uses the go 'fmt'
+library, for better compatability with Go types at the expense of not being as exact of a clone of
+Python format strings.
 
 Braces {} are used to indicate 'format items', anything outside of braces will be emitted directly
 into the output string, and anything inside will be used to get values from the other function
@@ -20,13 +22,12 @@ as detailed below. 'Must' formats, but will panic when 'Fmt' would return an err
 like 'Fmt', but returns an error type. In the event that there's an error formatting the error,
 'Error' includes the format error and as much of the formatted string as possible.
 
-All of them take a format string, and then a list of arguments to look up elements from.
+All of them take a format string and arguments to be used in formatting that string.
 
 # Getting Values from Field Names
 
-Values can be fetched from field names in two forms: simple names, or compound names. All compound
-names build off of simple names, and all simple names are dependent on the type of format function
-you call.
+Values can be fetched from field names in two forms: simple names or compound names. All compound
+names build off of simple names.
 
 ## Simple field names:
 
