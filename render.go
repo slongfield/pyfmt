@@ -141,7 +141,6 @@ func (r *render) parseFlags(flags string) error {
 }
 
 func (r *render) render() error {
-	//TODO(slongfield): Create the format string.
 	var prefix, verb, radix string
 	var width int64
 	var err error
@@ -197,11 +196,8 @@ func (r *render) render() error {
 		}
 		r.minWidth = ""
 	}
-	// Padding with leading zeros is directly supported by Go's formatting library.
-	if r.align == padSign {
-		panic("Cannot pad sign yet.")
-	}
 	str := fmt.Sprintf(strings.Join([]string{"%", r.sign, radix, r.minWidth, r.precision, verb}, ""), r.val)
+	// TODO(slongfield): Add an assertion here that we're operating on a numeric type.
 	if prefix != "" {
 		if str[0] == '-' {
 			str = strings.Join([]string{"-", prefix, str[1:]}, "")

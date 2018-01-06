@@ -22,7 +22,7 @@ const (
 
 func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar rune) {
 	length := int64(len(s))
-	if length >= width {
+	if length >= width || align == noAlign {
 		b.WriteString(s)
 		return
 	}
@@ -33,8 +33,6 @@ func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar r
 		fill = string(fillChar)
 	}
 	switch align {
-	case noAlign:
-		b.WriteString(s)
 	case right:
 		b.WriteString(strings.Repeat(fill, int(width-length)))
 		b.WriteString(s)
@@ -46,6 +44,14 @@ func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar r
 		b.WriteString(strings.Repeat(fill, int(prePad)))
 		b.WriteString(s)
 		b.WriteString(strings.Repeat(fill, int(width-length-prePad)))
+	// TODO(slongfield): padSign is only valid if we had formatted a
+	case padSign:
+		if s[0] == '-' || s[0] == '+' {
+			b.WriteString(string(s[0]))
+			b.WriteAlignedString(s[1:], right, width-1, fillChar)
+		} else {
+			b.WriteAlignedString(s, right, width, fillChar)
+		}
 	}
 }
 
