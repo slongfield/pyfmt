@@ -16,6 +16,7 @@ from hypothesis.strategies import floats, from_regex, integers, text
 import build
 
 _NUM_TEST = 1000
+_DEBUG = False
 
 
 @given(text(alphabet=string.printable))
@@ -47,7 +48,8 @@ def test_format_one_int(pre_str, fmt, post_str, val):
     except (ValueError, IndexError, KeyError):
         assume(False)
 
-    print("{}.format({}) = {}".format(fmt_str, val, pyfmt))
+    if _DEBUG:
+        print("{}.format({}) = {}".format(fmt_str, val, pyfmt))
 
     gofmt = build.FormatOneInt(fmt_str.encode("ascii"), val)
 
@@ -80,7 +82,7 @@ def test_format_one_double(pre_str, fmt, post_str, val):
     except (ValueError, IndexError, KeyError):
         assume(False)
 
-    if len(pyfmt) < 100:
+    if len(pyfmt) < 100 and _DEBUG:
         print("{}.format({}) = {}".format(fmt_str, val, pyfmt))
 
     gofmt = build.FormatOneDouble(fmt_str.encode("ascii"), val)
@@ -108,7 +110,8 @@ def test_format_one_str(pre_str, fmt, post_str, val):
     except (ValueError, IndexError, KeyError):
         assume(False)
 
-    print("{}.format({}) = {}".format(fmt_str, val, pyfmt))
+    if _DEBUG:
+        print("{}.format({}) = {}".format(fmt_str, val, pyfmt))
 
     gofmt = build.FormatOneString(fmt_str.encode("ascii"), val.encode("ascii"))
 
