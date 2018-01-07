@@ -37,7 +37,7 @@ func (r *render) clearFlags() {
 	r.flags = flags{}
 }
 
-var flagPattern = regexp.MustCompile(`\A(.[<>=^]|[<>=^]?)([\+\- ]?)(#?)(0?)(\d*)(\.\d*)?([bdoxXeEfFgGrts%]?)\z`)
+var flagPattern = regexp.MustCompile(`\A((?:.[<>=^])|(?:[<>=^])?)([\+\- ]?)(#?)(0?)(\d*)(\.\d*)?([bdoxXeEfFgGrts%]?)\z`)
 
 func (r *render) parseFlags(flags string) error {
 	r.renderVerb = "v"
@@ -48,7 +48,7 @@ func (r *render) parseFlags(flags string) error {
 		return Error("Invalid flag pattern: {}", flags)
 	}
 	f := flagPattern.FindStringSubmatch(flags)
-	// fmt.Printf("Matched %#v\n", f)
+	//fmt.Printf("Matched %s %#v\n", flags, f)
 	if len(f[1]) > 1 {
 		var size int
 		r.fillChar, size = utf8.DecodeRuneInString(f[1])
@@ -78,8 +78,12 @@ func (r *render) parseFlags(flags string) error {
 		r.showRadix = true
 	}
 	if f[4] != "" {
-		r.align = padSign
-		r.fillChar = '0'
+		if f[1] == "" {
+			r.align = padSign
+		}
+		if r.fillChar == 0 {
+			r.fillChar = '0'
+		}
 	}
 	if f[5] != "" {
 		r.minWidth = f[5]
@@ -130,7 +134,8 @@ func (r *render) render() error {
 			prefix = "0o"
 		}
 	}
-	// Only let Go handle the width for floating types
+	// Only let Go handle the width for floating+complex types, elsewhere the alignment rules are
+	// different.
 	//fmt.Printf("minWdith is %s %s\n", r.minWidth, r.precision)
 	if r.renderVerb != "f" && r.renderVerb != "F" && r.renderVerb != "g" && r.renderVerb != "G" && r.renderVerb != "e" && r.renderVerb != "E" {
 		if r.minWidth == "" {
@@ -152,13 +157,16 @@ func (r *render) render() error {
 	if prefix != "" {
 		// Get rid of any prefix added by minWidth. We'll add this back in later when we
 		// WriteAlignedString to the underlying buffer
+		str = strings.TrimLeft(str, " ")
 		if str != string(r.fillChar) {
-			str = strings.TrimLeft(str, string(r.fillChar)+" ")
+			str = strings.TrimLeft(str, string(r.fillChar))
 		}
 		if len(str) > 0 && str[0] == '-' {
 			str = strings.Join([]string{"-", prefix, str[1:]}, "")
 		} else if len(str) > 0 && str[0] == '+' {
 			str = strings.Join([]string{"+", prefix, str[1:]}, "")
+		} else if r.sign == " " {
+			str = strings.Join([]string{" ", prefix, str}, "")
 		} else {
 			str = strings.Join([]string{prefix, str}, "")
 		}
@@ -169,14 +177,28 @@ func (r *render) render() error {
 			return err
 		}
 	}
-	if r.showRadix && r.align == padSign {
-		if str[0] == '0' {
-			r.buf.WriteString(str[0:2])
-			r.buf.WriteAlignedString(str[2:], r.align, width-2, r.fillChar)
-		} else {
-			r.buf.WriteString(str[0:3])
-			r.buf.WriteAlignedString(str[3:], r.align, width-3, r.fillChar)
+	if len(str) > 0 {
+		if str[0] != '(' && (r.align == left || r.align == padSign) {
+			if str[0] == '-' {
+				r.buf.WriteString("-")
+				str = str[1:]
+				width -= 1
+			} else if str[0] == '+' {
+				r.buf.WriteString("+")
+				str = str[1:]
+				width -= 1
+			} else if str[0] == ' ' {
+				r.buf.WriteString(" ")
+				str = str[1:]
+				width -= 1
+			} else {
+				r.buf.WriteString(r.sign)
+			}
 		}
+	}
+	if r.showRadix && r.align == padSign {
+		r.buf.WriteString(str[0:2])
+		r.buf.WriteAlignedString(str[2:], r.align, width-2, r.fillChar)
 	} else {
 		r.buf.WriteAlignedString(str, r.align, width, r.fillChar)
 	}

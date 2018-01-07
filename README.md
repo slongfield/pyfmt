@@ -182,4 +182,5 @@ implementations to unexported struct fields.
 
 # TODOs
 
-  *  Add more tests.
+  *  Improve performance. Some of the string manipulations allocate more frequenly than they need
+     to, causing slowdown relative to the built-in 'fmt' library.
