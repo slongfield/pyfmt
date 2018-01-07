@@ -64,7 +64,7 @@ func TestGetElement(t *testing.T) {
 	for _, test := range tests {
 		got, err := getElement(test.lookupStr, test.lookupOffset, test.elems...)
 		if err != nil {
-			t.Error("getElement(%v, %v, %v) Errored: %v", test.lookupStr, test.lookupOffset, test.elems, err)
+			t.Error(Must("getElement({lookupStr}, {lookupOffset}, {elems}) Errored: {1}", test, err))
 		}
 		// If we got a reflect.Value, pull out the underlying element. These print correctly, but
 		// reflect.DeepEqual doesn't like the unboxing.
@@ -73,7 +73,7 @@ func TestGetElement(t *testing.T) {
 			got = elementFromValue(got.(reflect.Value))
 		}
 		if !reflect.DeepEqual(test.want, got) {
-			t.Error("getElement(%v, %v, %v) = %v Want: %v", test.lookupStr, test.lookupOffset, test.elems, got, test.want)
+			t.Error(Must("getElement({lookupStr}, {lookupOffset}, {elems}) = {1} Want: {want}", test, got))
 		}
 	}
 }
