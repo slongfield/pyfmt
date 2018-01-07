@@ -86,6 +86,7 @@ func TestSingleFormat(t *testing.T) {
 		// String tests
 		{"{}", "☺", "☺"},
 		{"{:t}", "", "string"},
+		{"asdf{:10}", "1234", "asdf      1234"},
 
 		// Integer tests
 		{"{}", 42, "42"},
@@ -122,6 +123,7 @@ func TestSingleFormat(t *testing.T) {
 		{"{: 010X}", -10, "-00000000A"},
 		{"{::>+9X}", 1234, ":::::+4D2"},
 		{"{::=#10X}", -1, "-0X::::::1"},
+		{"{:10X}", 0, "         0"},
 
 		// Float tests
 		{"{:.0%}", 0.25, "25%"},

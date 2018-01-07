@@ -102,7 +102,7 @@ The optional align feature can be one of the following:
 
 ```
   '<': left-aligned
-  '>': right-aligned
+  '>': right-aligned (this is the default)
   '=': padding after the sign, but before the digits (e.g., for +000042)
   '^': centered
 ```
