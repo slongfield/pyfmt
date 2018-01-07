@@ -14,16 +14,15 @@ func (b *buffer) WriteString(s string) {
 }
 
 const (
-	noAlign = iota
+	right = iota
 	left
-	right
 	padSign
 	center
 )
 
 func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar rune) {
 	length := int64(len(s))
-	if length >= width || align == noAlign {
+	if length >= width {
 		b.WriteString(s)
 		return
 	}

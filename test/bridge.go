@@ -45,4 +45,13 @@ func FormatOneString(cformat *C.char, arg *C.char) *C.char {
 	return C.CString(result)
 }
 
+//export FormatNothing
+func FormatNothing(cformat *C.char) *C.char {
+	result, err := pyfmt.Fmt(C.GoString(cformat))
+	if err != nil {
+		fmt.Printf("Error formatting: %v", err)
+	}
+	return C.CString(result)
+}
+
 func main() {}

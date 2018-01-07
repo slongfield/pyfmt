@@ -13,7 +13,7 @@ build/__init__.py: *.py build/
 
 .PHONY: check
 check: build/libbridge.so build/__init__.py
-	pytest
+	pytest --hypothesis-show-statistics
 
 .PHONY: clean
 clean:

@@ -37,7 +37,7 @@ func (r *render) clearFlags() {
 	r.flags = flags{}
 }
 
-var flagPattern = regexp.MustCompile(`\A(.[<>=^]|[<>=^]?)([\+\- ]?)(#?)(\d*)\.?(\d*)([bdoxXeEfFgGrts%]?)\z`)
+var flagPattern = regexp.MustCompile(`\A(.[<>=^]|[<>=^]?)([\+\- ]?)(#?)(0?)(\d*)(\.\d*)?([bdoxXeEfFgGrts%]?)\z`)
 
 func (r *render) parseFlags(flags string) error {
 	r.renderVerb = "v"
@@ -48,6 +48,7 @@ func (r *render) parseFlags(flags string) error {
 		return Error("Invalid flag pattern: {}", flags)
 	}
 	f := flagPattern.FindStringSubmatch(flags)
+	// fmt.Printf("Matched %#v\n", f)
 	if len(f[1]) > 1 {
 		var size int
 		r.fillChar, size = utf8.DecodeRuneInString(f[1])
@@ -77,15 +78,22 @@ func (r *render) parseFlags(flags string) error {
 		r.showRadix = true
 	}
 	if f[4] != "" {
-		r.minWidth = f[4]
+		r.align = padSign
+		r.fillChar = '0'
 	}
 	if f[5] != "" {
-		r.precision = "." + f[5]
+		r.minWidth = f[5]
 	}
 	if f[6] != "" {
-		switch f[6] {
-		case "b", "d", "o", "x", "X", "e", "E", "f", "F", "g", "G":
-			r.renderVerb = f[6]
+		r.precision = f[6]
+	}
+	if f[7] != "" {
+		switch f[7] {
+		case "b", "o", "x", "X", "e", "E", "f", "F", "g", "G":
+			r.renderVerb = f[7]
+		case "d":
+			r.renderVerb = f[7]
+			r.showRadix = false
 		case "%":
 			r.percent = true
 			r.renderVerb = "f"
@@ -122,20 +130,34 @@ func (r *render) render() error {
 			prefix = "0o"
 		}
 	}
-	if r.align != noAlign {
-		width, err = strconv.ParseInt(r.minWidth, 10, 64)
-		if err != nil {
-			return Error("Can't convert width {} to int", r.minWidth)
+	// Only let Go handle the width for floating types
+	//fmt.Printf("minWdith is %s %s\n", r.minWidth, r.precision)
+	if r.renderVerb != "f" && r.renderVerb != "F" && r.renderVerb != "g" && r.renderVerb != "G" && r.renderVerb != "e" && r.renderVerb != "E" {
+		if r.minWidth == "" {
+			width = 0
+		} else {
+			width, err = strconv.ParseInt(r.minWidth, 10, 64)
+			if err != nil {
+				return Error("Can't convert width {} to int", r.minWidth)
+			}
 		}
 		r.minWidth = ""
 	}
+	//fmt.Printf("Width is %d\n", width)
+	// fmt.Printf("Format was %v\n", strings.Join([]string{"%", r.sign, radix, r.minWidth, r.precision, r.renderVerb}, ""))
+
 	str := fmt.Sprintf(strings.Join([]string{
 		"%", r.sign, radix, r.minWidth, r.precision, r.renderVerb}, ""), r.val)
 	// TODO(slongfield): Add an assertion here that we're operating on a numeric type.
 	if prefix != "" {
-		if str[0] == '-' {
+		// Get rid of any prefix added by minWidth. We'll add this back in later when we
+		// WriteAlignedString to the underlying buffer
+		if str != string(r.fillChar) {
+			str = strings.TrimLeft(str, string(r.fillChar)+" ")
+		}
+		if len(str) > 0 && str[0] == '-' {
 			str = strings.Join([]string{"-", prefix, str[1:]}, "")
-		} else if str[0] == '+' {
+		} else if len(str) > 0 && str[0] == '+' {
 			str = strings.Join([]string{"+", prefix, str[1:]}, "")
 		} else {
 			str = strings.Join([]string{prefix, str}, "")
@@ -147,7 +169,17 @@ func (r *render) render() error {
 			return err
 		}
 	}
-	r.buf.WriteAlignedString(str, r.align, width, r.fillChar)
+	if r.showRadix && r.align == padSign {
+		if str[0] == '0' {
+			r.buf.WriteString(str[0:2])
+			r.buf.WriteAlignedString(str[2:], r.align, width-2, r.fillChar)
+		} else {
+			r.buf.WriteString(str[0:3])
+			r.buf.WriteAlignedString(str[3:], r.align, width-3, r.fillChar)
+		}
+	} else {
+		r.buf.WriteAlignedString(str, r.align, width, r.fillChar)
+	}
 	return nil
 }
 

@@ -20,21 +20,22 @@ func TestParseFlags(t *testing.T) {
 		{"-.4o", flags{precision: ".4", sign: "", renderVerb: "o"}},
 		{"+.4o", flags{precision: ".4", sign: "+", renderVerb: "o"}},
 		{"r", flags{renderVerb: "#v"}},
+		{"#010X", flags{showRadix: true, align: padSign, fillChar: '0', minWidth: "10", renderVerb: "X"}},
 	}
 
 	for _, test := range tests {
 		defer func() {
 			if r := recover(); r != nil {
-				t.Error("parseFlags(%v) paniced: %v", test.flagStr, r)
+				t.Error(Error("parseFlags({flagStr}) paniced: {1}", test, r))
 			}
 		}()
 		r := render{}
 		err := r.parseFlags(test.flagStr)
 		if err != nil {
-			t.Error("parseFlags(%v) Errored: %v", test.flagStr, err)
+			t.Error(Error("parseFlags({flagStr}) Errored: {1}", test, err))
 		}
 		if !reflect.DeepEqual(test.want, r.flags) {
-			t.Error("parseFlags(%v) Got: %v Want %v", test.flagStr, r.flags, test.want)
+			t.Error(Error("parseFlags({flagStr}) Got: \n{1:s} Want \n{want:s}", test, r.flags))
 		}
 	}
 }
@@ -52,16 +53,16 @@ func TestParseFlagsError(t *testing.T) {
 	for _, test := range tests {
 		defer func() {
 			if r := recover(); r != nil {
-				t.Error("parseFlags(%v) paniced: %v", test.flagStr, r)
+				t.Error(Error("parseFlags({flagStr}) paniced: {1}", test, r))
 			}
 		}()
 		r := render{}
 		err := r.parseFlags(test.flagStr)
 		if err == nil {
-			t.Error("parseFlags(%v) did not raise an error", test.flagStr)
+			t.Error(Error("parseFlags({flagStr}) did not raise an error", test))
 		}
 		if !strings.Contains(err.Error(), test.want) {
-			t.Error("parseFlags(%v) raised %v, missing want string %v", test.flagStr, err, test.want)
+			t.Error(Error("parseFlags({flagStr}) raised {1}, missing want string {want}", test, err))
 		}
 	}
 

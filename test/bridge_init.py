@@ -18,3 +18,7 @@ def FormatOneDouble(fmt, a):
 
 def FormatOneString(fmt, a):
     return ffi.string(lib.FormatOneString(fmt, a))
+
+
+def FormatNothing(fmt):
+    return ffi.string(lib.FormatNothing(fmt))

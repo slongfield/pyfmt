@@ -5,6 +5,14 @@ import build
 import pytest
 
 
+@pytest.mark.parametrize("fmt_str", ["test", "{{", "}}", "{{}}", "1234"])
+def test_none(fmt_str):
+    """Tests that empty format args are OK."""
+    gofmt = build.FormatNothing(fmt_str.encode("ascii"))
+    pyfmt = fmt_str.format().encode("ascii")
+    assert gofmt == pyfmt
+
+
 @pytest.mark.parametrize("val", [42, -10, 100000, 0, 2**31 - 1])
 @pytest.mark.parametrize("fmt_str", ["{}", "{:b}", "{:x}", "{:d}", "{:X}", "{:#x}", "{:#X}",
                                      "{:#d}", "{:#b}", "{:#o}", "{:<10x}", "{:+^7x}"])
