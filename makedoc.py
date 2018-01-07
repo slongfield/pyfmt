@@ -14,6 +14,8 @@ def main():
     doc = []
 
     for line in open("README.md"):
+        if line.startswith("[![Build"):
+            continue
         if line.startswith("```"):
             continue
         if line.startswith("#"):

@@ -19,6 +19,8 @@ literal '{' and '}' runes to be emitted in the output.
 Each format item consists of a 'field name', which indicates which value from the argument list to
 use, and a 'format specifier', which indicates how to format that item.
 
+Requires Golang 1.5 or newer.
+
 Functions
 
 pyfmt implements three functions, 'Fmt', 'Must', and 'Error'. 'Fmt' formats, but may return an error
