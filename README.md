@@ -3,14 +3,14 @@
 
 pyfmt implements Python's advanced string formatting in Golang.
 
-This is an alternative to the `fmt` package's Sprintf-style string formatting, and mimics the
+This is an alternative to the `fmt` package's Sprintf-style string formatting and mimics the
 .format() style formatting available in Python >2.6. Under the hood, it still uses the go 'fmt'
-library, for better compatability with Go types at the expense of not being as exact of a clone of
+library, for better compatibility with Go types at the expense of not being as exact of a clone of
 Python format strings.
 
 Braces {} are used to indicate 'format items', anything outside of braces will be emitted directly
 into the output string, and anything inside will be used to get values from the other function
-arguments, and format them. The one exception is double braces, '{{' and '}}', which will cause
+arguments and format them. The one exception is double braces, '{{' and '}}', which will cause
 literal '{' and '}' runes to be emitted in the output.
 
 Each format item consists of a 'field name', which indicates which value from the argument list to
@@ -78,13 +78,13 @@ Lists are accessed with square brackets:
   pyfmt.Must("{0[0]}", []string{"test"}) --> "test"
 ```
 
-saimilarly, maps are accessed with square brackets:
+similarly, maps are accessed with square brackets:
 
 ```
   pyfmt.Must("{0[test]}", map[string]interface{}{"test": "42"}) --> "42"
 ```
 
-and struct fields are accessed with period, '.'
+and struct fields are accessed with a period ('.')
 
 ```
   pyfmt.Must("{foo.bar.baz}", MyStruct{foo: Foo{bar: Bar{baz: "test"}}}) --> "test"
@@ -147,9 +147,9 @@ For floats and complex numbers:
 ```
   'e' - Scientific notation
   'E' - Similar to e, but uppercase
-  'f' - Fixed point, displays number as a fixed-point number.
+  'f' - Fixed point, displays the number as a fixed-point number.
   'F' - Same, but uppercase.
-  'g' - General format, prints as a fixed point unless its too large, than switches to scientific
+  'g' - General format, prints as a fixed point unless it's too large, then switches to scientific
         notation. (default)
   'G' - Similar to g, but uses capital letters
   '%' - Percentage, multiplies the number by 100 and displays it with a '%' sign. Can also be
@@ -174,7 +174,7 @@ have an exact equivalent in Python.
 
 # Custom formatters
 
-Internally, pyfmt uses Go's fmt package, so existing types satisfying those Formatter, GoStringer,
+Internally, pyfmt uses Go's fmt package, so existing types satisfying its Formatter, GoStringer,
 or Stringer interfaces will use those implementations as appropriate.
 
 If the type satisfies the PyFormatter interface, the format specifier will be passed to that
@@ -185,5 +185,5 @@ implementations to unexported struct fields.
 
 # TODOs
 
-  *  Improve performance. Some of the string manipulations allocate more frequenly than they need
+  *  Improve performance. Some of the string manipulations allocate more frequency than they need
      to, causing slowdown relative to the built-in 'fmt' library.
