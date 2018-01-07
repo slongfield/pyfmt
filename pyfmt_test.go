@@ -3,6 +3,7 @@ package pyfmt
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"testing"
@@ -76,7 +77,6 @@ func (s stringer) String() string {
 }
 
 // Tests formatting individual values of various types.
-// TODO(slongfield): Add more tests.
 func TestSingleFormat(t *testing.T) {
 	tests := []struct {
 		fmtStr string
@@ -127,10 +127,21 @@ func TestSingleFormat(t *testing.T) {
 
 		// Float tests
 		{"{:.0%}", 0.25, "25%"},
+		{"{:g}", math.Inf(+1), "+Inf"},
+		{"{:g}", math.Inf(-1), "-Inf"},
+		// No negative zero in Go constants
+		{"{:g}", math.Copysign(-0.0, -1), "-0"},
+		{"{:g}", math.NaN(), "NaN"},
 		{"{:.1%}", 0.25, "25.0%"},
 		{"{:.3%}", 0.0, "0.000%"},
 		{"{:.0%}", -2.0, "-200%"},
 		{"{:.3%}", 1.2, "120.000%"},
+		{"{::<20E}", 0.0, "0.000000E+00::::::::"},
+		{"{:<1.0%}", math.Copysign(-0.0, -1), "-0%"},
+		{"{:<1.0%}", -0.1, "-10%"},
+		{"{::<#1.0E}", 0.0, "0E+00"},
+		{"{: 8.1E}", 1.1, " 1.1E+00"},
+		{"{: 01.1E}", 1.9, " 1.9E+00"},
 
 		// Complex numbers
 		{"{}", 0i, "(0+0i)"},

@@ -4,7 +4,7 @@
 /*
 pyfmt
 
-pyfmt implements Python-style advanced string formatting.
+pyfmt implements Python's advanced string formatting in Golang.
 
 This is an alternative to the `fmt` package's Sprintf-style string formatting, and mimics the
 .format() style formatting available in Python >2.6. Under the hood, it still uses the go 'fmt'
@@ -89,7 +89,7 @@ standard format specifier:
 The optional align feature can be one of the following:
 
   '<': left-aligned
-  '>': right-aligned
+  '>': right-aligned (this is the default)
   '=': padding after the sign, but before the digits (e.g., for +000042)
   '^': centered
 
@@ -144,7 +144,8 @@ pyfmt allows for some special formatting types that aren't in the Python format 
   't' - convert the value to its Go type
   's' - if printing a struct, print the struct field names
 
-These are equivalent to the `%#v`, `%T` and `%+v` format strings in the "fmt" package.
+These are equivalent to the `%#v`, `%T` and `%+v` format strings in the "fmt" package, but don't
+have an exact equivalent in Python.
 
 Custom formatters
 
@@ -159,6 +160,7 @@ implementations to unexported struct fields.
 
 TODOs
 
-  *  Add more tests.
+  *  Improve performance. Some of the string manipulations allocate more frequenly than they need
+     to, causing slowdown relative to the built-in 'fmt' library.
 */
 package pyfmt

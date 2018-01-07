@@ -48,7 +48,6 @@ func (r *render) parseFlags(flags string) error {
 		return Error("Invalid flag pattern: {}", flags)
 	}
 	f := flagPattern.FindStringSubmatch(flags)
-	//fmt.Printf("Matched %s %#v\n", flags, f)
 	if len(f[1]) > 1 {
 		var size int
 		r.fillChar, size = utf8.DecodeRuneInString(f[1])
@@ -134,26 +133,25 @@ func (r *render) render() error {
 			prefix = "0o"
 		}
 	}
+
+	if r.minWidth == "" {
+		width = 0
+	} else {
+		width, err = strconv.ParseInt(r.minWidth, 10, 64)
+		if err != nil {
+			return Error("Can't convert width {} to int", r.minWidth)
+		}
+	}
+
 	// Only let Go handle the width for floating+complex types, elsewhere the alignment rules are
 	// different.
-	//fmt.Printf("minWdith is %s %s\n", r.minWidth, r.precision)
 	if r.renderVerb != "f" && r.renderVerb != "F" && r.renderVerb != "g" && r.renderVerb != "G" && r.renderVerb != "e" && r.renderVerb != "E" {
-		if r.minWidth == "" {
-			width = 0
-		} else {
-			width, err = strconv.ParseInt(r.minWidth, 10, 64)
-			if err != nil {
-				return Error("Can't convert width {} to int", r.minWidth)
-			}
-		}
 		r.minWidth = ""
 	}
-	//fmt.Printf("Width is %d\n", width)
-	// fmt.Printf("Format was %v\n", strings.Join([]string{"%", r.sign, radix, r.minWidth, r.precision, r.renderVerb}, ""))
 
 	str := fmt.Sprintf(strings.Join([]string{
 		"%", r.sign, radix, r.minWidth, r.precision, r.renderVerb}, ""), r.val)
-	// TODO(slongfield): Add an assertion here that we're operating on a numeric type.
+
 	if prefix != "" {
 		// Get rid of any prefix added by minWidth. We'll add this back in later when we
 		// WriteAlignedString to the underlying buffer
@@ -171,12 +169,21 @@ func (r *render) render() error {
 			str = strings.Join([]string{prefix, str}, "")
 		}
 	}
+
+	if r.renderVerb == "f" || r.renderVerb == "F" || r.renderVerb == "g" || r.renderVerb == "G" || r.renderVerb == "e" || r.renderVerb == "E" {
+		str = strings.TrimSpace(str)
+		if r.sign == " " && str[0] != '-' {
+			str = " " + str
+		}
+	}
+
 	if r.percent {
 		str, err = transformPercent(str)
 		if err != nil {
 			return err
 		}
 	}
+
 	if len(str) > 0 {
 		if str[0] != '(' && (r.align == left || r.align == padSign) {
 			if str[0] == '-' {
@@ -196,6 +203,7 @@ func (r *render) render() error {
 			}
 		}
 	}
+
 	if r.showRadix && r.align == padSign {
 		r.buf.WriteString(str[0:2])
 		r.buf.WriteAlignedString(str[2:], r.align, width-2, r.fillChar)
@@ -220,8 +228,13 @@ func (r *render) setupPercent() error {
 }
 
 func transformPercent(p string) (string, error) {
-	parts := strings.SplitN(p, ".", 2)
+	var parts []string
 	var sign string
+	if p[0] == '-' {
+		sign = "-"
+		p = p[1:]
+	}
+	parts = strings.SplitN(p, ".", 2)
 	var suffix string
 	if len(parts) == 2 {
 		prefix, err := strconv.ParseInt(parts[0], 10, 64)
