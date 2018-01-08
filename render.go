@@ -37,6 +37,9 @@ func (r *render) clearFlags() {
 	r.flags = flags{}
 }
 
+// From profiling the benchmarks, this regex is responsible for most of both the allocations and
+// the memory use (~75%), and not an insignificant amount of the run time. Replacing it with a
+// hand-written NFA would probably significantly help performance.
 var flagPattern = regexp.MustCompile(`\A((?:.[<>=^])|(?:[<>=^])?)([\+\- ]?)(#?)(0?)(\d*)(\.\d*)?([bdoxXeEfFgGrts%]?)\z`)
 
 func (r *render) parseFlags(flags string) error {
@@ -149,8 +152,7 @@ func (r *render) render() error {
 		r.minWidth = ""
 	}
 
-	str := fmt.Sprintf(strings.Join([]string{
-		"%", r.sign, radix, r.minWidth, r.precision, r.renderVerb}, ""), r.val)
+	str := fmt.Sprintf("%"+r.sign+radix+r.minWidth+r.precision+r.renderVerb, r.val)
 
 	if prefix != "" {
 		// Get rid of any prefix added by minWidth. We'll add this back in later when we
