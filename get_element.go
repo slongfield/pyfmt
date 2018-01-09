@@ -122,6 +122,11 @@ func elementByName(name string, src interface{}) (interface{}, error) {
 	}
 
 	switch srcVal.Kind() {
+	case reflect.Ptr:
+		if srcVal.IsNil() {
+			return nil, Error("attempted to dereference nil pointer {}", name)
+		}
+		return elementByName(name, reflect.Indirect(srcVal))
 	case reflect.Struct:
 		v := srcVal.FieldByName(name)
 		if v.IsValid() {
