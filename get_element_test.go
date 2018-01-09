@@ -14,6 +14,10 @@ type outer struct {
 	second inner
 }
 
+type outptr struct {
+	ptr *inner
+}
+
 func nestedMap() map[string]map[string]map[string]int64 {
 	m := make(map[string]map[string]map[string]int64)
 	m["test"] = make(map[string]map[string]int64)
@@ -59,6 +63,7 @@ func TestGetElement(t *testing.T) {
 		{[]interface{}{3, []string{"foo", "bar"}}, "1[1]", 0, "bar"},
 		{[]interface{}{struct{ foo outer }{foo: outer{first: inner{test: 5}}}}, "foo.first.test", 0, int64(5)},
 		{[]interface{}{nestedMap()}, "test[bar].foo", 0, int64(99)},
+		{[]interface{}{outptr{ptr: &inner{test: 3}}}, "ptr.test", 0, int64(3)},
 	}
 
 	for _, test := range tests {
