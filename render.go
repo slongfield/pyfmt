@@ -65,6 +65,9 @@ var isDigit = map[byte]struct{}{
 // (see render_test.go for regex)
 func splitFlags(flags string) (align, sign, radix, zeroPad, minWidth, precision, verb string, err error) {
 	end := len(flags)
+	if end == 0 {
+		return
+	}
 	state := alignState
 	for i := 0; i < end; {
 		switch state {
