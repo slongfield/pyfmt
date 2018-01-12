@@ -8,7 +8,7 @@ import (
 )
 
 func TestSplitFlags(t *testing.T) {
-	tests := []string{"", "4<", "+=", "^10.3", ":> #010.4X", "<0%", "10.10E", "#x"}
+	tests := []string{"", "4<", "+=", "^10.3", ":> #010.4X", "<0%", "10.10E", "#x", "<<", "=="}
 	var flagPattern = regexp.MustCompile(`\A((?:.[<>=^])|(?:[<>=^])?)([\+\- ]?)(#?)(0?)(\d*)(\.\d*)?([bdoxXeEfFgGrts%]?)\z`)
 
 	for _, test := range tests {
@@ -25,7 +25,7 @@ func TestSplitFlags(t *testing.T) {
 		got := []string{test, align, sign, radix, zeroPad, minWidth, precision, verb}
 		want := flagPattern.FindStringSubmatch(test)
 		if !reflect.DeepEqual(got, want) {
-			t.Error(Error("splitFlags({}) = {} Want: {}", test, got, want))
+			t.Error(Error("splitFlags({}) = \n{:r} Want: \n{:r}", test, got, want))
 		}
 	}
 }

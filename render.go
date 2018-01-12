@@ -69,10 +69,10 @@ func splitFlags(flags string) (align, sign, radix, zeroPad, minWidth, precision,
 	for i := 0; i < end; {
 		switch state {
 		case alignState:
-			if flags[i] == '<' || flags[i] == '>' || flags[i] == '=' || flags[i] == '^' {
-				i += 1
-			} else if end > 1 && (flags[1] == '<' || flags[1] == '>' || flags[1] == '=' || flags[1] == '^') {
+			if end > 1 && (flags[1] == '<' || flags[1] == '>' || flags[1] == '=' || flags[1] == '^') {
 				i += 2
+			} else if flags[i] == '<' || flags[i] == '>' || flags[i] == '=' || flags[i] == '^' {
+				i += 1
 			}
 			// TODO(slongfield): Support arbitrary runes as alignment characters.
 			align = flags[0:i]
@@ -82,7 +82,7 @@ func splitFlags(flags string) (align, sign, radix, zeroPad, minWidth, precision,
 				sign = flags[i : i+1]
 				i += 1
 			}
-			state = widthState
+			state = radixState
 		case radixState:
 			if flags[i] == '#' {
 				radix = flags[i : i+1]
