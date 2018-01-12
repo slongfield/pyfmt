@@ -7,30 +7,41 @@ import (
 	"testing"
 )
 
+const flagRegex = `\A((?:.[<>=^])|(?:[<>=^])?)([\+\- ]?)(#?)(0?)(\d*)(\.\d*)?([bdoxXeEfFgGrts%]?)\z`
+
 func TestSplitFlags(t *testing.T) {
-	tests := []string{"", "4<", "+=", "^10.3", ":> #010.4X", "<0%", "10.10E", "#x", "<<", "=="}
-	var flagPattern = regexp.MustCompile(`\A((?:.[<>=^])|(?:[<>=^])?)([\+\- ]?)(#?)(0?)(\d*)(\.\d*)?([bdoxXeEfFgGrts%]?)\z`)
+	var flagPattern = regexp.MustCompile(flagRegex)
+
+	tests := []string{"", "4<", "+=", "^10.3", ":> #010.4X",
+		"<0%", "10.10E", "#x", "<<", "==", "💩<"}
 
 	for _, test := range tests {
 		align, sign, radix, zeroPad, minWidth, precision, verb, err := splitFlags(test)
 
 		if err != nil {
-			t.Error(Error("splitFlags({}) errored: {}!", test, err))
+			t.Error(Must("splitFlags({}) errored: {}!", test, err))
 		}
 
 		if !flagPattern.MatchString(test) {
-			t.Error(Error("Could not match with regex!: {}", test))
+			t.Error(Must("Could not match with regex!: {}", test))
 		}
 
 		got := []string{test, align, sign, radix, zeroPad, minWidth, precision, verb}
 		want := flagPattern.FindStringSubmatch(test)
 		if !reflect.DeepEqual(got, want) {
-			t.Error(Error("splitFlags({}) = \n{:r} Want: \n{:r}", test, got, want))
+			t.Error(Must("splitFlags({}) = \n{:r} Want: \n{:r}", test, got, want))
 		}
 	}
 }
 
 func TestSplitFlagsError(t *testing.T) {
+	tests := []string{"<><>", "asdf", "^^^", "^#xx", ":>  #010.4x"}
+	for _, test := range tests {
+		_, _, _, _, _, _, _, err := splitFlags(test)
+		if err == nil {
+			t.Error(Must("splitFlags({}) did not error!", test))
+		}
+	}
 }
 
 func TestParseFlags(t *testing.T) {
@@ -53,16 +64,16 @@ func TestParseFlags(t *testing.T) {
 	for _, test := range tests {
 		defer func() {
 			if r := recover(); r != nil {
-				t.Error(Error("parseFlags({flagStr}) paniced: {1}", test, r))
+				t.Error(Must("parseFlags({flagStr}) paniced: {1}", test, r))
 			}
 		}()
 		r := render{}
 		err := r.parseFlags(test.flagStr)
 		if err != nil {
-			t.Error(Error("parseFlags({flagStr}) Errored: {1}", test, err))
+			t.Error(Must("parseFlags({flagStr}) Errored: {1}", test, err))
 		}
 		if !reflect.DeepEqual(test.want, r.flags) {
-			t.Error(Error("parseFlags({flagStr}) Got: \n{1:s} Want \n{want:s}", test, r.flags))
+			t.Error(Must("parseFlags({flagStr}) Got: \n{1:s} Want \n{want:s}", test, r.flags))
 		}
 	}
 }
@@ -80,16 +91,16 @@ func TestParseFlagsError(t *testing.T) {
 	for _, test := range tests {
 		defer func() {
 			if r := recover(); r != nil {
-				t.Error(Error("parseFlags({flagStr}) paniced: {1}", test, r))
+				t.Error(Must("parseFlags({flagStr}) paniced: {1}", test, r))
 			}
 		}()
 		r := render{}
 		err := r.parseFlags(test.flagStr)
 		if err == nil {
-			t.Error(Error("parseFlags({flagStr}) did not raise an error", test))
+			t.Error(Must("parseFlags({flagStr}) did not raise an error", test))
 		}
 		if !strings.Contains(err.Error(), test.want) {
-			t.Error(Error("parseFlags({flagStr}) raised {1}, missing want string {want}", test, err))
+			t.Error(Must("parseFlags({flagStr}) raised {1}, missing want string {want}", test, err))
 		}
 	}
 }

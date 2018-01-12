@@ -61,8 +61,7 @@ var isDigit = map[byte]struct{}{
 	'5': struct{}{}, '6': struct{}{}, '7': struct{}{}, '8': struct{}{}, '9': struct{}{},
 }
 
-// splitFlags splits out the flags into the various fields. This replaces the previous regex parser
-// (see render_test.go for regex)
+// splitFlags splits out the flags into the various fields.
 func splitFlags(flags string) (align, sign, radix, zeroPad, minWidth, precision, verb string, err error) {
 	end := len(flags)
 	if end == 0 {
@@ -72,12 +71,15 @@ func splitFlags(flags string) (align, sign, radix, zeroPad, minWidth, precision,
 	for i := 0; i < end; {
 		switch state {
 		case alignState:
-			if end > 1 && (flags[1] == '<' || flags[1] == '>' || flags[1] == '=' || flags[1] == '^') {
-				i += 2
-			} else if flags[i] == '<' || flags[i] == '>' || flags[i] == '=' || flags[i] == '^' {
-				i += 1
+			if flags[i] == '<' || flags[i] == '>' || flags[i] == '=' || flags[i] == '^' {
+				i = 1
 			}
-			// TODO(slongfield): Support arbitrary runes as alignment characters.
+			if end > 1 {
+				_, size := utf8.DecodeRuneInString(flags)
+				if flags[size] == '<' || flags[size] == '>' || flags[size] == '=' || flags[size] == '^' {
+					i = size + 1
+				}
+			}
 			align = flags[0:i]
 			state = signState
 		case signState:
