@@ -14,12 +14,31 @@ type outer struct {
 	second inner
 }
 
+type outptr struct {
+	ptr *inner
+}
+
+type b struct {
+	Bazzer int
+	Bazzle []int
+}
+
 func nestedMap() map[string]map[string]map[string]int64 {
 	m := make(map[string]map[string]map[string]int64)
 	m["test"] = make(map[string]map[string]int64)
 	m["test"]["bar"] = make(map[string]int64)
 	m["test"]["bar"]["foo"] = 99
 	return m
+}
+
+// pointyMap is a map with some pointers and lists in it.
+func pointyMap() interface{} {
+	return map[string]interface{}{
+		"bar": map[string]interface{}{
+			"baz":  &b{0, []int{1, 2, 3}},
+			"buzz": []int{4, 5, 6}},
+		"baz":    []int{7, 8, 9},
+		"bazzle": []string{"10", "11", "12"}}
 }
 
 // elementFromValue will try to turn a reflect.Value into an interface{} when possible.
@@ -59,12 +78,16 @@ func TestGetElement(t *testing.T) {
 		{[]interface{}{3, []string{"foo", "bar"}}, "1[1]", 0, "bar"},
 		{[]interface{}{struct{ foo outer }{foo: outer{first: inner{test: 5}}}}, "foo.first.test", 0, int64(5)},
 		{[]interface{}{nestedMap()}, "test[bar].foo", 0, int64(99)},
+		{[]interface{}{outptr{ptr: &inner{test: 3}}}, "ptr.test", 0, int64(3)},
+		{[]interface{}{pointyMap()}, "bar.baz.Bazzle[0]", 0, int(1)},
+		{[]interface{}{pointyMap()}, "bazzle", 0, []string{"10", "11", "12"}},
+		{[]interface{}{pointyMap()}, "bazzle[1]", 0, "11"},
 	}
 
 	for _, test := range tests {
 		got, err := getElement(test.lookupStr, test.lookupOffset, test.elems...)
 		if err != nil {
-			t.Error("getElement(%v, %v, %v) Errored: %v", test.lookupStr, test.lookupOffset, test.elems, err)
+			t.Error(Must("getElement({lookupStr}, {lookupOffset}, {elems}) Errored: {1}", test, err))
 		}
 		// If we got a reflect.Value, pull out the underlying element. These print correctly, but
 		// reflect.DeepEqual doesn't like the unboxing.
@@ -73,7 +96,7 @@ func TestGetElement(t *testing.T) {
 			got = elementFromValue(got.(reflect.Value))
 		}
 		if !reflect.DeepEqual(test.want, got) {
-			t.Error("getElement(%v, %v, %v) = %v Want: %v", test.lookupStr, test.lookupOffset, test.elems, got, test.want)
+			t.Error(Must("getElement({lookupStr}, {lookupOffset}, {elems}) = {1} ({1:t}) Want: {want} ({want:t})", test, got))
 		}
 	}
 }

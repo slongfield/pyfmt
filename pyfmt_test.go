@@ -42,6 +42,7 @@ func TestBasicFormat(t *testing.T) {
 		{"{a}{c}", []interface{}{ts{a: 1, b: 2, c: 3}}, "13"},
 		{"0b{:b}", []interface{}{3}, "0b11"},
 		{"{:#x}", []interface{}{42}, "0x2a"},
+		{"{bar.baz.Bazzle[0]}", []interface{}{pointyMap()}, "1"},
 	}
 
 	for _, test := range tests {
