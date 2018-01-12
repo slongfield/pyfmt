@@ -1,8 +1,8 @@
 package pyfmt
 
 import (
+	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -37,27 +37,123 @@ func (r *render) clearFlags() {
 	r.flags = flags{}
 }
 
-// From profiling the benchmarks, this regex is responsible for most of both the allocations and
-// the memory use (~75%), and not an insignificant amount of the run time. Replacing it with a
-// hand-written NFA would probably significantly help performance.
-var flagPattern = regexp.MustCompile(`\A((?:.[<>=^])|(?:[<>=^])?)([\+\- ]?)(#?)(0?)(\d*)(\.\d*)?([bdoxXeEfFgGrts%]?)\z`)
+// Flag state machine
+const (
+	alignState = iota
+	signState
+	radixState
+	zeroState
+	widthState
+	precisionState
+	verbState
+	endState
+)
+
+// validFlags holds the list of valid flags, for quick checkup.
+// Valid flags are 'bdoxXeEfFgGrts%'
+var validFlags = map[byte]struct{}{
+	'b': struct{}{}, 'd': struct{}{}, 'o': struct{}{}, 'x': struct{}{}, 'X': struct{}{},
+	'e': struct{}{}, 'E': struct{}{}, 'f': struct{}{}, 'F': struct{}{}, 'g': struct{}{},
+	'G': struct{}{}, 'r': struct{}{}, 't': struct{}{}, 's': struct{}{}, '%': struct{}{}}
+
+var isDigit = map[byte]struct{}{
+	'0': struct{}{}, '1': struct{}{}, '2': struct{}{}, '3': struct{}{}, '4': struct{}{},
+	'5': struct{}{}, '6': struct{}{}, '7': struct{}{}, '8': struct{}{}, '9': struct{}{},
+}
+
+// splitFlags splits out the flags into the various fields. This replaces the previous regex parser
+// (see render_test.go for regex)
+func splitFlags(flags string) (align, sign, radix, zeroPad, minWidth, precision, verb string, err error) {
+	end := len(flags)
+	state := alignState
+	for i := 0; i < end; {
+		switch state {
+		case alignState:
+			if flags[i] == '<' || flags[i] == '>' || flags[i] == '=' || flags[i] == '^' {
+				i += 1
+			} else if end > 1 && (flags[1] == '<' || flags[1] == '>' || flags[1] == '=' || flags[1] == '^') {
+				i += 2
+			}
+			// TODO(slongfield): Support arbitrary runes as alignment characters.
+			align = flags[0:i]
+			state = signState
+		case signState:
+			if flags[i] == '+' || flags[i] == '-' || flags[i] == ' ' {
+				sign = flags[i : i+1]
+				i += 1
+			}
+			state = widthState
+		case radixState:
+			if flags[i] == '#' {
+				radix = flags[i : i+1]
+				i += 1
+			}
+			state = zeroState
+		case zeroState:
+			if flags[i] == '0' {
+				zeroPad = flags[i : i+1]
+				i += 1
+			}
+			state = widthState
+		case widthState:
+			var j int
+			for j = i; j < end; {
+				if _, ok := isDigit[flags[j]]; ok {
+					j += 1
+				} else {
+					break
+				}
+			}
+			minWidth = flags[i:j]
+			i = j
+			state = precisionState
+		case precisionState:
+			if flags[i] == '.' {
+				var j int
+				for j = i + 1; j < end; {
+					if _, ok := isDigit[flags[j]]; ok {
+						j += 1
+					} else {
+						break
+					}
+				}
+				precision = flags[i:j]
+				i = j
+			}
+			state = verbState
+		case verbState:
+			if _, ok := validFlags[flags[i]]; ok {
+				verb = flags[i : i+1]
+				i += 1
+			}
+			state = endState
+		default:
+			// Get to this state when we've run out of other states. If we reach this, it means we've
+			// gone too far, since we've passed the verb state, but aren't at the end of the string, so
+			// error.
+			err = errors.New("Could not decode format specification: " + flags)
+			i = end + 1
+		}
+	}
+	return
+}
 
 func (r *render) parseFlags(flags string) error {
 	r.renderVerb = "v"
 	if flags == "" {
 		return nil
 	}
-	if !flagPattern.MatchString(flags) {
-		return Error("Invalid flag pattern: {}", flags)
+	align, sign, radix, zeroPad, minWidth, precision, verb, err := splitFlags(flags)
+	if err != nil {
+		return Error("Invalid flag pattern: {}, {}", flags, err)
 	}
-	f := flagPattern.FindStringSubmatch(flags)
-	if len(f[1]) > 1 {
+	if len(align) > 1 {
 		var size int
-		r.fillChar, size = utf8.DecodeRuneInString(f[1])
-		f[1] = f[1][size:]
+		r.fillChar, size = utf8.DecodeRuneInString(align)
+		align = align[size:]
 	}
-	if f[1] != "" {
-		switch f[1] {
+	if align != "" {
+		switch align {
 		case "<":
 			r.align = left
 		case ">":
@@ -70,35 +166,35 @@ func (r *render) parseFlags(flags string) error {
 			panic("Unreachable, this should never happen.")
 		}
 	}
-	if f[2] != "" {
+	if sign != "" {
 		// "-" is the default behavior, ignore it.
-		if f[2] != "-" {
-			r.sign = f[2]
+		if sign != "-" {
+			r.sign = sign
 		}
 	}
-	if f[3] == "#" {
+	if radix == "#" {
 		r.showRadix = true
 	}
-	if f[4] != "" {
-		if f[1] == "" {
+	if zeroPad != "" {
+		if align == "" {
 			r.align = padSign
 		}
 		if r.fillChar == 0 {
 			r.fillChar = '0'
 		}
 	}
-	if f[5] != "" {
-		r.minWidth = f[5]
+	if minWidth != "" {
+		r.minWidth = minWidth
 	}
-	if f[6] != "" {
-		r.precision = f[6]
+	if precision != "" {
+		r.precision = precision
 	}
-	if f[7] != "" {
-		switch f[7] {
+	if verb != "" {
+		switch verb {
 		case "b", "o", "x", "X", "e", "E", "f", "F", "g", "G":
-			r.renderVerb = f[7]
+			r.renderVerb = verb
 		case "d":
-			r.renderVerb = f[7]
+			r.renderVerb = verb
 			r.showRadix = false
 		case "%":
 			r.percent = true
