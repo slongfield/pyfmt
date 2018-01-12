@@ -88,6 +88,7 @@ func TestSingleFormat(t *testing.T) {
 		{"{}", "☺", "☺"},
 		{"{:t}", "", "string"},
 		{"asdf{:10}", "1234", "asdf      1234"},
+		{"{:💩^10}", "poop", "💩💩💩poop💩💩💩"},
 
 		// Integer tests
 		{"{}", 42, "42"},
