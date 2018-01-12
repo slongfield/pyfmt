@@ -32,6 +32,8 @@ func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar r
 	} else {
 		fill = string(fillChar)
 	}
+	// TODO(slongfield): The strings.Repeat here is the next low-hanging performance improvement,
+	// since it allocates. Takes up ~25% of the LargeCenteredString benchmark.
 	switch align {
 	case right:
 		b.WriteString(strings.Repeat(fill, int(width-length)))
