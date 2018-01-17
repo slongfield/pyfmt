@@ -20,3 +20,4 @@ clean:
 	rm -rf _bridge.py
 	rm -rf build/
 	rm -rf __pycache__/
+	rm -rf .hypothesis
