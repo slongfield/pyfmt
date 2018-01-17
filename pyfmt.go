@@ -13,11 +13,13 @@ type buffer struct {
 	stage    []byte
 }
 
+// WriteString writes a string into the backing buffer.
 func (b *buffer) WriteString(s string) {
 	b.contents = append(b.contents, s...)
 }
 
-func (b *buffer) WriteRepeatedRune(r string, rep int) {
+// WriteString writes a string into the backing buffer 'rep' times.
+func (b *buffer) WriteRepeatedString(r string, rep int) {
 	b.stage = append(b.stage, r...)
 	for len(b.stage) < len(r)*rep {
 		b.stage = append(b.stage, b.stage...)
@@ -33,6 +35,8 @@ const (
 	center
 )
 
+// WriteString writes a string into the backing buffer, padded out to width, based on the alignment
+// type.
 func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar rune) {
 	length := int64(len(s))
 	if length >= width {
