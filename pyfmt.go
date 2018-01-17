@@ -173,6 +173,9 @@ func (f *ff) doFormat(format string) error {
 	return nil
 }
 
+// Split splits a string on a rune, returning slices pointing to the half before that rune, and
+// after. If the rune doesn't appear, the first string returned is the whole string, and the second
+// string is empty.
 func split(s string, sep rune) (string, string) {
 	for i, c := range s {
 		if c == sep {
