@@ -2,7 +2,6 @@ package pyfmt
 
 import (
 	"errors"
-	"strings"
 	"sync"
 )
 
@@ -176,11 +175,14 @@ func (f *ff) doFormat(format string) error {
 }
 
 func splitFormat(field string) (string, string) {
-	s := strings.SplitN(field, ":", 2)
-	if len(s) == 1 {
-		return s[0], ""
+	for i, c := range field {
+		if c == ':' {
+			if i+1 <= len(field) {
+				return field[:i], field[i+1:]
+			}
+		}
 	}
-	return s[0], s[1]
+	return field[:], field[len(field):]
 }
 
 func (f *ff) getArg(argName string) (interface{}, error) {
