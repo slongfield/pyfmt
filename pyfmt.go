@@ -6,11 +6,24 @@ import (
 	"sync"
 )
 
-// Using a simple []byte instead of bytes.Buffer to avoid the dependency.
-type buffer []byte
+// buffer type uses a simple []byte instead of bytes.Buffer to avoid the dependency, and has a
+// staging buffer which can be used as temporary space to avoid allocations.
+type buffer struct {
+	contents []byte
+	stage    []byte
+}
 
 func (b *buffer) WriteString(s string) {
-	*b = append(*b, s...)
+	b.contents = append(b.contents, s...)
+}
+
+func (b *buffer) WriteRepeatedRune(r string, rep int) {
+	b.stage = append(b.stage, r...)
+	for len(b.stage) < len(r)*rep {
+		b.stage = append(b.stage, b.stage...)
+	}
+	b.contents = append(b.contents, b.stage[:len(r)*rep]...)
+	b.stage = b.stage[:0]
 }
 
 const (
@@ -36,16 +49,20 @@ func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar r
 	// since it allocates. Takes up ~25% of the LargeCenteredString benchmark.
 	switch align {
 	case right:
-		b.WriteString(strings.Repeat(fill, int(width-length)))
+		for i := 0; i < int(width-length); i++ {
+			b.WriteString(fill)
+		}
 		b.WriteString(s)
 	case left:
 		b.WriteString(s)
-		b.WriteString(strings.Repeat(fill, int(width-length)))
+		for i := 0; i < int(width-length); i++ {
+			b.WriteString(fill)
+		}
 	case center:
 		prePad := (width - length) / 2
-		b.WriteString(strings.Repeat(fill, int(prePad)))
+		b.WriteRepeatedRune(fill, int(prePad))
 		b.WriteString(s)
-		b.WriteString(strings.Repeat(fill, int(width-length-prePad)))
+		b.WriteRepeatedRune(fill, int(width-length-prePad))
 	case padSign:
 		if s[0] == '-' || s[0] == '+' {
 			b.WriteString(string(s[0]))
@@ -87,7 +104,7 @@ func newFormater() *ff {
 }
 
 func (f *ff) free() {
-	f.buf = f.buf[:0]
+	f.buf.contents = f.buf.contents[:0]
 	f.args = f.args[:0]
 	f.listPos = 0
 	ffFree.Put(f)
@@ -184,7 +201,7 @@ func Fmt(format string, a ...interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	s := string(f.buf)
+	s := string(f.buf.contents)
 	return s, nil
 }
 
