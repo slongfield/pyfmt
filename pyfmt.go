@@ -6,11 +6,26 @@ import (
 	"sync"
 )
 
-// Using a simple []byte instead of bytes.Buffer to avoid the dependency.
-type buffer []byte
+// buffer type uses a simple []byte instead of bytes.Buffer to avoid the dependency, and has a
+// staging buffer which can be used as temporary space to avoid allocations.
+type buffer struct {
+	contents []byte
+	stage    []byte
+}
 
+// WriteString writes a string into the backing buffer.
 func (b *buffer) WriteString(s string) {
-	*b = append(*b, s...)
+	b.contents = append(b.contents, s...)
+}
+
+// WriteString writes a string into the backing buffer 'rep' times.
+func (b *buffer) WriteRepeatedString(r string, rep int) {
+	b.stage = append(b.stage, r...)
+	for len(b.stage) < len(r)*rep {
+		b.stage = append(b.stage, b.stage...)
+	}
+	b.contents = append(b.contents, b.stage[:len(r)*rep]...)
+	b.stage = b.stage[:0]
 }
 
 const (
@@ -20,6 +35,8 @@ const (
 	center
 )
 
+// WriteString writes a string into the backing buffer, padded out to width, based on the alignment
+// type.
 func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar rune) {
 	length := int64(len(s))
 	if length >= width {
@@ -34,16 +51,16 @@ func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar r
 	}
 	switch align {
 	case right:
-		b.WriteString(strings.Repeat(fill, int(width-length)))
+		b.WriteRepeatedString(fill, int(width-length))
 		b.WriteString(s)
 	case left:
 		b.WriteString(s)
-		b.WriteString(strings.Repeat(fill, int(width-length)))
+		b.WriteRepeatedString(fill, int(width-length))
 	case center:
 		prePad := (width - length) / 2
-		b.WriteString(strings.Repeat(fill, int(prePad)))
+		b.WriteRepeatedString(fill, int(prePad))
 		b.WriteString(s)
-		b.WriteString(strings.Repeat(fill, int(width-length-prePad)))
+		b.WriteRepeatedString(fill, int(width-length-prePad))
 	case padSign:
 		if s[0] == '-' || s[0] == '+' {
 			b.WriteString(string(s[0]))
@@ -85,7 +102,7 @@ func newFormater() *ff {
 }
 
 func (f *ff) free() {
-	f.buf = f.buf[:0]
+	f.buf.contents = f.buf.contents[:0]
 	f.args = f.args[:0]
 	f.listPos = 0
 	ffFree.Put(f)
@@ -182,7 +199,7 @@ func Fmt(format string, a ...interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	s := string(f.buf)
+	s := string(f.buf.contents)
 	return s, nil
 }
 
