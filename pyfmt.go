@@ -195,7 +195,7 @@ func (f *ff) getArg(argName string) (interface{}, error) {
 	return val, err
 }
 
-// Fmt is the equivlent of Python's string.format() function. Takes a list of possible elements
+// Fmt is the equivalent of Python's string.format() function. Takes a list of possible elements
 // to use in formatting, and substitutes them.
 func Fmt(format string, a ...interface{}) (string, error) {
 	f := newFormater()
