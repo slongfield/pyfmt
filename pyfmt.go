@@ -3,6 +3,7 @@ package pyfmt
 import (
 	"errors"
 	"sync"
+	"unicode/utf8"
 )
 
 // buffer type uses a simple []byte instead of bytes.Buffer to avoid the dependency, and has a
@@ -149,7 +150,7 @@ func (f *ff) doFormat(format string) error {
 		}
 		field := format[cachei:i]
 		var err error
-		name, format := splitFormat(field)
+		name, format := split(field, ':')
 		f.r.val, err = f.getArg(name)
 		if err != nil {
 			return err
@@ -174,15 +175,15 @@ func (f *ff) doFormat(format string) error {
 	return nil
 }
 
-func splitFormat(field string) (string, string) {
-	for i, c := range field {
-		if c == ':' {
-			if i+1 <= len(field) {
-				return field[:i], field[i+1:]
+func split(s string, sep rune) (string, string) {
+	for i, c := range s {
+		if c == sep {
+			if i+utf8.RuneLen(sep) <= len(s) {
+				return s[:i], s[i+utf8.RuneLen(sep):]
 			}
 		}
 	}
-	return field[:], field[len(field):]
+	return s[:], s[len(s):]
 }
 
 func (f *ff) getArg(argName string) (interface{}, error) {

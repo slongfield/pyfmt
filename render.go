@@ -328,37 +328,36 @@ func (r *render) setupPercent() error {
 }
 
 func transformPercent(p string) (string, error) {
-	var parts []string
 	var sign string
 	if p[0] == '-' {
 		sign = "-"
 		p = p[1:]
 	}
-	parts = strings.SplitN(p, ".", 2)
+	intPart, mantissa := split(p, '.')
 	var suffix string
-	if len(parts) == 2 {
-		prefix, err := strconv.ParseInt(parts[0], 10, 64)
+	if mantissa != "" {
+		prefix, err := strconv.ParseInt(intPart, 10, 64)
 		if err != nil {
 			return "", Error("Couldn't parse format prefix from: {}", p)
 		}
 		if prefix == 0 {
-			if parts[1][2:] != "" {
-				suffix = "." + parts[1][2:]
+			if mantissa[2:] != "" {
+				suffix = "." + mantissa[2:]
 			}
-			if parts[1][0] == '0' {
-				return strings.Join([]string{sign, parts[1][1:2], suffix, "%"}, ""), nil
+			if mantissa[0] == '0' {
+				return strings.Join([]string{sign, mantissa[1:2], suffix, "%"}, ""), nil
 			}
-			return strings.Join([]string{sign, parts[1][0:2], suffix, "%"}, ""), nil
-		} else if len(parts[0]) == 1 {
-			if parts[1][2:] != "" {
-				suffix = "." + parts[1][2:]
+			return strings.Join([]string{sign, mantissa[0:2], suffix, "%"}, ""), nil
+		} else if len(intPart) == 1 {
+			if mantissa[2:] != "" {
+				suffix = "." + mantissa[2:]
 			}
-			return strings.Join([]string{sign, parts[0], parts[1][0:2], suffix, "%"}, ""), nil
+			return strings.Join([]string{sign, intPart, mantissa[0:2], suffix, "%"}, ""), nil
 		}
-		if parts[1][2:] != "" {
-			suffix = "." + parts[1][2:]
+		if mantissa[2:] != "" {
+			suffix = "." + mantissa[2:]
 		}
-		return strings.Join([]string{sign, parts[0], parts[1][0:2], suffix, "%"}, ""), nil
+		return strings.Join([]string{sign, intPart, mantissa[0:2], suffix, "%"}, ""), nil
 	}
 	if _, err := strconv.ParseInt(p, 10, 64); err != nil {
 		return p + "%", nil
