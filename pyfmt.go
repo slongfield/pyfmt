@@ -62,7 +62,7 @@ const (
 	useStruct
 )
 
-// ff is used to store a formatter's state and is reused iwth sync.Pool to avoid allocations.
+// ff is used to store a formatter's state and is reused with sync.Pool to avoid allocations.
 type ff struct {
 	buf buffer
 
@@ -104,11 +104,10 @@ func (f *ff) doFormat(format string) error {
 			if format[i] == '}' {
 				if i+1 == end || format[i+1] != '}' {
 					return errors.New("Single '}' encountered in format string")
-				} else {
-					f.buf.WriteString(format[cachei:i])
-					i++
-					cachei = i
 				}
+				f.buf.WriteString(format[cachei:i])
+				i++
+				cachei = i
 			}
 			i++
 		}

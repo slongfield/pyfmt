@@ -16,6 +16,11 @@ def main():
     for line in open("README.md"):
         if line.startswith("[![Build"):
             continue
+        if line == "pyfmt":
+            continue
+        # Fix up the header to be in pyfmt format
+        if line.startswith("pyfmt implements"):
+            line = "Package " + line
         if line.startswith("```"):
             continue
         if line.startswith("#"):

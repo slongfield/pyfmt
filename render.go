@@ -83,26 +83,26 @@ func splitFlags(flags string) (align, sign, radix, zeroPad, minWidth, precision,
 		case signState:
 			if flags[i] == '+' || flags[i] == '-' || flags[i] == ' ' {
 				sign = flags[i : i+1]
-				i += 1
+				i++
 			}
 			state = radixState
 		case radixState:
 			if flags[i] == '#' {
 				radix = flags[i : i+1]
-				i += 1
+				i++
 			}
 			state = zeroState
 		case zeroState:
 			if flags[i] == '0' {
 				zeroPad = flags[i : i+1]
-				i += 1
+				i++
 			}
 			state = widthState
 		case widthState:
 			var j int
 			for j = i; j < end; {
 				if isDigit(flags[j]) {
-					j += 1
+					j++
 				} else {
 					break
 				}
@@ -115,7 +115,7 @@ func splitFlags(flags string) (align, sign, radix, zeroPad, minWidth, precision,
 				var j int
 				for j = i + 1; j < end; {
 					if isDigit(flags[j]) {
-						j += 1
+						j++
 					} else {
 						break
 					}
@@ -127,7 +127,7 @@ func splitFlags(flags string) (align, sign, radix, zeroPad, minWidth, precision,
 		case verbState:
 			if validFlag(flags[i]) {
 				verb = flags[i : i+1]
-				i += 1
+				i++
 			}
 			state = endState
 		default:
@@ -290,15 +290,15 @@ func (r *render) render() error {
 			if str[0] == '-' {
 				r.buf.WriteString("-")
 				str = str[1:]
-				width -= 1
+				width--
 			} else if str[0] == '+' {
 				r.buf.WriteString("+")
 				str = str[1:]
-				width -= 1
+				width--
 			} else if str[0] == ' ' {
 				r.buf.WriteString(" ")
 				str = str[1:]
-				width -= 1
+				width--
 			} else {
 				r.buf.WriteString(r.sign)
 			}
@@ -348,9 +348,8 @@ func transformPercent(p string) (string, error) {
 			}
 			if parts[1][0] == '0' {
 				return strings.Join([]string{sign, parts[1][1:2], suffix, "%"}, ""), nil
-			} else {
-				return strings.Join([]string{sign, parts[1][0:2], suffix, "%"}, ""), nil
 			}
+			return strings.Join([]string{sign, parts[1][0:2], suffix, "%"}, ""), nil
 		} else if len(parts[0]) == 1 {
 			if parts[1][2:] != "" {
 				suffix = "." + parts[1][2:]
