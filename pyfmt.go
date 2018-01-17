@@ -53,20 +53,16 @@ func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar r
 	// since it allocates. Takes up ~25% of the LargeCenteredString benchmark.
 	switch align {
 	case right:
-		for i := 0; i < int(width-length); i++ {
-			b.WriteString(fill)
-		}
+		b.WriteRepeatedString(fill, int(width-length))
 		b.WriteString(s)
 	case left:
 		b.WriteString(s)
-		for i := 0; i < int(width-length); i++ {
-			b.WriteString(fill)
-		}
+		b.WriteRepeatedString(fill, int(width-length))
 	case center:
 		prePad := (width - length) / 2
-		b.WriteRepeatedRune(fill, int(prePad))
+		b.WriteRepeatedString(fill, int(prePad))
 		b.WriteString(s)
-		b.WriteRepeatedRune(fill, int(width-length-prePad))
+		b.WriteRepeatedString(fill, int(width-length-prePad))
 	case padSign:
 		if s[0] == '-' || s[0] == '+' {
 			b.WriteString(string(s[0]))
