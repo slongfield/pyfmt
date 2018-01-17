@@ -32,6 +32,8 @@ func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar r
 	} else {
 		fill = string(fillChar)
 	}
+	// TODO(slongfield): The strings.Repeat here is the next low-hanging performance improvement,
+	// since it allocates. Takes up ~25% of the LargeCenteredString benchmark.
 	switch align {
 	case right:
 		b.WriteString(strings.Repeat(fill, int(width-length)))
@@ -60,7 +62,7 @@ const (
 	useStruct
 )
 
-// ff is used to store a formatter's state and is reused iwth sync.Pool to avoid allocations.
+// ff is used to store a formatter's state and is reused with sync.Pool to avoid allocations.
 type ff struct {
 	buf buffer
 
@@ -102,11 +104,10 @@ func (f *ff) doFormat(format string) error {
 			if format[i] == '}' {
 				if i+1 == end || format[i+1] != '}' {
 					return errors.New("Single '}' encountered in format string")
-				} else {
-					f.buf.WriteString(format[cachei:i])
-					i++
-					cachei = i
 				}
+				f.buf.WriteString(format[cachei:i])
+				i++
+				cachei = i
 			}
 			i++
 		}

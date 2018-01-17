@@ -49,16 +49,14 @@ const (
 	endState
 )
 
-// validFlags holds the list of valid flags, for quick checkup.
-// Valid flags are 'bdoxXeEfFgGrts%'
-var validFlags = map[byte]struct{}{
-	'b': struct{}{}, 'd': struct{}{}, 'o': struct{}{}, 'x': struct{}{}, 'X': struct{}{},
-	'e': struct{}{}, 'E': struct{}{}, 'f': struct{}{}, 'F': struct{}{}, 'g': struct{}{},
-	'G': struct{}{}, 'r': struct{}{}, 't': struct{}{}, 's': struct{}{}, '%': struct{}{}}
+// validFlags are 'bdoxXeEfFgGrts%'
+func validFlag(b byte) bool {
+	return (b == 'b' || b == 'd' || b == 'o' || b == 'x' || b == 'X' || b == 'e' || b == 'E' || b == 'f' || b == 'F' || b == 'g' || b == 'G' || b == 'r' || b == 't' || b == 's' || b == '%')
+}
 
-var isDigit = map[byte]struct{}{
-	'0': struct{}{}, '1': struct{}{}, '2': struct{}{}, '3': struct{}{}, '4': struct{}{},
-	'5': struct{}{}, '6': struct{}{}, '7': struct{}{}, '8': struct{}{}, '9': struct{}{},
+func isDigit(d byte) bool {
+	return (d == '0' || d == '1' || d == '2' || d == '3' || d == '4' || d == '5' ||
+		d == '6' || d == '7' || d == '8' || d == '9')
 }
 
 // splitFlags splits out the flags into the various fields.
@@ -85,26 +83,26 @@ func splitFlags(flags string) (align, sign, radix, zeroPad, minWidth, precision,
 		case signState:
 			if flags[i] == '+' || flags[i] == '-' || flags[i] == ' ' {
 				sign = flags[i : i+1]
-				i += 1
+				i++
 			}
 			state = radixState
 		case radixState:
 			if flags[i] == '#' {
 				radix = flags[i : i+1]
-				i += 1
+				i++
 			}
 			state = zeroState
 		case zeroState:
 			if flags[i] == '0' {
 				zeroPad = flags[i : i+1]
-				i += 1
+				i++
 			}
 			state = widthState
 		case widthState:
 			var j int
 			for j = i; j < end; {
-				if _, ok := isDigit[flags[j]]; ok {
-					j += 1
+				if isDigit(flags[j]) {
+					j++
 				} else {
 					break
 				}
@@ -116,8 +114,8 @@ func splitFlags(flags string) (align, sign, radix, zeroPad, minWidth, precision,
 			if flags[i] == '.' {
 				var j int
 				for j = i + 1; j < end; {
-					if _, ok := isDigit[flags[j]]; ok {
-						j += 1
+					if isDigit(flags[j]) {
+						j++
 					} else {
 						break
 					}
@@ -127,9 +125,9 @@ func splitFlags(flags string) (align, sign, radix, zeroPad, minWidth, precision,
 			}
 			state = verbState
 		case verbState:
-			if _, ok := validFlags[flags[i]]; ok {
+			if validFlag(flags[i]) {
 				verb = flags[i : i+1]
-				i += 1
+				i++
 			}
 			state = endState
 		default:
@@ -292,15 +290,15 @@ func (r *render) render() error {
 			if str[0] == '-' {
 				r.buf.WriteString("-")
 				str = str[1:]
-				width -= 1
+				width--
 			} else if str[0] == '+' {
 				r.buf.WriteString("+")
 				str = str[1:]
-				width -= 1
+				width--
 			} else if str[0] == ' ' {
 				r.buf.WriteString(" ")
 				str = str[1:]
-				width -= 1
+				width--
 			} else {
 				r.buf.WriteString(r.sign)
 			}
@@ -350,9 +348,8 @@ func transformPercent(p string) (string, error) {
 			}
 			if parts[1][0] == '0' {
 				return strings.Join([]string{sign, parts[1][1:2], suffix, "%"}, ""), nil
-			} else {
-				return strings.Join([]string{sign, parts[1][0:2], suffix, "%"}, ""), nil
 			}
+			return strings.Join([]string{sign, parts[1][0:2], suffix, "%"}, ""), nil
 		} else if len(parts[0]) == 1 {
 			if parts[1][2:] != "" {
 				suffix = "." + parts[1][2:]

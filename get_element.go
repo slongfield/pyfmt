@@ -56,7 +56,7 @@ func getElement(name string, offset int, elems ...interface{}) (interface{}, err
 }
 
 // splitName splits out the name into the subfields. Errors if it can't cleanly split.
-// Note that this does treat test[foo].bar and test.bar[foo] as being interchangable. This normally
+// Note that this does treat test[foo].bar and test.bar[foo] as being interchangeable. This normally
 // makes sense, especially for structs-of-structs and maps-of-maps, but may be somewhat strange for
 // lists of lists, where a[5][6] can be written a.5.6.
 func splitName(name string) ([]string, error) {

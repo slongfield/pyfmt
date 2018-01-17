@@ -205,7 +205,7 @@ func BenchmarkPrintEmptyParallel(b *testing.B) {
 func BenchmarkFmtForComparison(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			fmt.Sprintf("")
+			_ = fmt.Sprintf("")
 		}
 	})
 }
@@ -229,7 +229,7 @@ func BenchmarkLargeString(b *testing.B) {
 func BenchmarkFmtLargeString(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			fmt.Sprintf(strings.Repeat("%[0]v", 1000), "test")
+			_ = fmt.Sprintf(strings.Repeat("%[0]v", 1000), "test")
 		}
 	})
 }
