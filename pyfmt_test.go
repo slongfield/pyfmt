@@ -86,6 +86,7 @@ func TestSingleFormat(t *testing.T) {
 	}{
 		// String tests
 		{"{}", "☺", "☺"},
+		{"{:}", "0", "0"},
 		{"{:t}", "", "string"},
 		{"asdf{:10}", "1234", "asdf      1234"},
 		{"{:💩^10}", "poop", "💩💩💩poop💩💩💩"},
@@ -219,17 +220,27 @@ func BenchmarkCenteredParallel(b *testing.B) {
 }
 
 func BenchmarkLargeString(b *testing.B) {
+	test := strings.Repeat("{0}", 1000)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			Must(strings.Repeat("{0}", 1000), "test")
+			Must(test, "test")
 		}
 	})
 }
 
 func BenchmarkFmtLargeString(b *testing.B) {
+	test := strings.Repeat("%[0]v", 1000)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_ = fmt.Sprintf(strings.Repeat("%[0]v", 1000), "test")
+			_ = fmt.Sprintf(test, "test")
+		}
+	})
+}
+
+func BenchmarkComplexFormat(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			Must("{0[0]:😄^+#30.30b}", []int{42})
 		}
 	})
 }

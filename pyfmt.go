@@ -2,8 +2,8 @@ package pyfmt
 
 import (
 	"errors"
-	"strings"
 	"sync"
+	"unicode/utf8"
 )
 
 // buffer type uses a simple []byte instead of bytes.Buffer to avoid the dependency, and has a
@@ -148,7 +148,7 @@ func (f *ff) doFormat(format string) error {
 		}
 		field := format[cachei:i]
 		var err error
-		name, format := splitFormat(field)
+		name, format := split(field, ':')
 		f.r.val, err = f.getArg(name)
 		if err != nil {
 			return err
@@ -173,12 +173,18 @@ func (f *ff) doFormat(format string) error {
 	return nil
 }
 
-func splitFormat(field string) (string, string) {
-	s := strings.SplitN(field, ":", 2)
-	if len(s) == 1 {
-		return s[0], ""
+// Split splits a string on a rune, returning slices pointing to the half before that rune, and
+// after. If the rune doesn't appear, the first string returned is the whole string, and the second
+// string is empty.
+func split(s string, sep rune) (string, string) {
+	for i, c := range s {
+		if c == sep {
+			if i+utf8.RuneLen(sep) <= len(s) {
+				return s[:i], s[i+utf8.RuneLen(sep):]
+			}
+		}
 	}
-	return s[0], s[1]
+	return s[:], s[len(s):]
 }
 
 func (f *ff) getArg(argName string) (interface{}, error) {
@@ -189,7 +195,7 @@ func (f *ff) getArg(argName string) (interface{}, error) {
 	return val, err
 }
 
-// Fmt is the equivlent of Python's string.format() function. Takes a list of possible elements
+// Fmt is the equivalent of Python's string.format() function. Takes a list of possible elements
 // to use in formatting, and substitutes them.
 func Fmt(format string, a ...interface{}) (string, error) {
 	f := newFormater()

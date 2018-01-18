@@ -13,7 +13,7 @@ import (
 func FormatOneInt(cformat *C.char, arg C.int) *C.char {
 	result, err := pyfmt.Fmt(C.GoString(cformat), int32(arg))
 	if err != nil {
-		fmt.Printf("Error formatting: %v", err)
+		fmt.Printf("Error formatting: %v\n", err)
 	}
 	return C.CString(result)
 }
@@ -23,7 +23,7 @@ func FormatOneInt(cformat *C.char, arg C.int) *C.char {
 func FormatOneFloat(cformat *C.char, arg C.float) *C.char {
 	result, err := pyfmt.Fmt(C.GoString(cformat), float32(arg))
 	if err != nil {
-		fmt.Printf("Error formatting: %v", err)
+		fmt.Printf("Error formatting: %v\n", err)
 	}
 	return C.CString(result)
 }
@@ -33,7 +33,7 @@ func FormatOneFloat(cformat *C.char, arg C.float) *C.char {
 func FormatOneDouble(cformat *C.char, arg C.double) *C.char {
 	result, err := pyfmt.Fmt(C.GoString(cformat), float64(arg))
 	if err != nil {
-		fmt.Printf("Error formatting: %v", err)
+		fmt.Printf("Error formatting: %v\n", err)
 	}
 	return C.CString(result)
 }
@@ -43,7 +43,7 @@ func FormatOneDouble(cformat *C.char, arg C.double) *C.char {
 func FormatOneString(cformat *C.char, arg *C.char) *C.char {
 	result, err := pyfmt.Fmt(C.GoString(cformat), C.GoString(arg))
 	if err != nil {
-		fmt.Printf("Error formatting: %v", err)
+		fmt.Printf("Error formatting: %v with %v, %v\n", C.GoString(cformat), C.GoString(arg), err)
 	}
 	return C.CString(result)
 }
@@ -53,7 +53,7 @@ func FormatOneString(cformat *C.char, arg *C.char) *C.char {
 func FormatNothing(cformat *C.char) *C.char {
 	result, err := pyfmt.Fmt(C.GoString(cformat))
 	if err != nil {
-		fmt.Printf("Error formatting: %v", err)
+		fmt.Printf("Error formatting: %v\n", err)
 	}
 	return C.CString(result)
 }
