@@ -49,7 +49,7 @@ func TestParseFlags(t *testing.T) {
 		flagStr string
 		want    flags
 	}{
-		{"", flags{renderVerb: "v"}},
+		{"", flags{renderVerb: "v", empty: true}},
 		{">>", flags{fillChar: '>', align: right, renderVerb: "v"}},
 		{">10.10", flags{align: right, minWidth: "10", precision: ".10", renderVerb: "v"}},
 		{"#x", flags{showRadix: true, renderVerb: "x"}},

@@ -13,6 +13,12 @@ type buffer struct {
 	stage    []byte
 }
 
+// Implements the io.Writer interface
+func (b *buffer) Write(p []byte) (n int, err error) {
+	b.contents = append(b.contents, p...)
+	return len(p), nil
+}
+
 // WriteString writes a string into the backing buffer.
 func (b *buffer) WriteString(s string) {
 	b.contents = append(b.contents, s...)

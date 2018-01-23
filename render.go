@@ -17,6 +17,7 @@ type flags struct {
 	precision  string
 	renderVerb string
 	percent    bool
+	empty      bool
 }
 
 // Render is the renderer used to render dispatched format strings into a buffer that's been set up
@@ -143,6 +144,7 @@ func splitFlags(flags string) (align, sign, radix, zeroPad, minWidth, precision,
 func (r *render) parseFlags(flags string) error {
 	r.renderVerb = "v"
 	if flags == "" {
+		r.empty = true
 		return nil
 	}
 	align, sign, radix, zeroPad, minWidth, precision, verb, err := splitFlags(flags)
@@ -220,6 +222,11 @@ func (r *render) render() error {
 	var prefix, radix string
 	var width int64
 	var err error
+	if r.empty {
+		fmt.Fprint(r.buf, r.val)
+		return nil
+	}
+
 	if r.percent {
 		if err = r.setupPercent(); err != nil {
 			return err
