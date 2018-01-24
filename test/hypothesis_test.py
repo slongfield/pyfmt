@@ -3,10 +3,6 @@
 This uses constrained random generation to generate thousands of different examples of format
 strings and then formats them both with Python's format library, and the Go implementation in
 pyfmt.
-
-Does not test for error equality, instead tests for:
-    If the Python formatter formats it without error, the Go formatter will format it in the same
-    way.
 """
 
 import string
@@ -27,11 +23,24 @@ def test_no_format_arguments(fmt_str):
     try:
         pyfmt = fmt_str.format().encode("ascii")
     except (ValueError, IndexError, KeyError):
-        assume(False)
+        assert build.FormatNothingError(fmt_str.encode("ascii"))
+        return
 
     gofmt = build.FormatNothing(fmt_str.encode("ascii"))
 
     assert gofmt == pyfmt
+
+
+@given(text(alphabet=string.printable))
+@settings(max_examples=_NUM_TEST)
+def test_no_format_arguments_errors(fmt_str):
+    """Test that without format arguments, match error conditions."""
+    try:
+        fmt_str.format().encode("ascii")
+    except (ValueError, IndexError, KeyError):
+        assert build.FormatNothingError(fmt_str.encode("ascii"))
+        return
+    assume(False)
 
 
 @given(text(alphabet=string.printable, max_size=10),
@@ -45,8 +54,14 @@ def test_format_one_int(pre_str, fmt, post_str, val):
 
     try:
         pyfmt = fmt_str.format(val).encode("ascii")
-    except (ValueError, IndexError, KeyError):
-        assume(False)
+    except (ValueError, IndexError, KeyError) as exp:
+        # Ignore the cases where formatting goes from {} to {0} formatting. The Go
+        # implementation supports this, but Python's doesn't
+        if "cannot switch from automatic field numbering" in str(exp):
+            assume(False)
+
+        assert build.FormatOneIntError(fmt_str.encode("ascii"), val)
+        return
 
     if _DEBUG:
         print("{}.format({}) = {}".format(fmt_str, val, pyfmt))
@@ -54,6 +69,28 @@ def test_format_one_int(pre_str, fmt, post_str, val):
     gofmt = build.FormatOneInt(fmt_str.encode("ascii"), val)
 
     assert gofmt == pyfmt
+
+
+@given(text(alphabet=string.printable, max_size=10),
+       from_regex(r"\A(([:print:][<>=^])|([<>=^]?))[\+\- ]?#?[0-9]{0,4}[bdoxX]\Z"),
+       text(alphabet=string.printable, max_size=10),
+       integers(min_value=-2**31, max_value=2**31 - 1))
+@settings(max_examples=_NUM_TEST)
+def test_format_one_int_erros(pre_str, fmt, post_str, val):
+    """Test that a single integer is formatted correctly."""
+    fmt_str = pre_str + "{:" + fmt + "}" + post_str
+
+    try:
+        fmt_str.format(val).encode("ascii")
+    except (ValueError, IndexError, KeyError) as exp:
+        # Ignore the cases where formatting goes from {} to {0} formatting. The Go
+        # implementation supports this, but Python's doesn't
+        if "cannot switch from automatic field numbering" in str(exp):
+            assume(False)
+
+        assert build.FormatOneIntError(fmt_str.encode("ascii"), val)
+        return
+    assume(False)
 
 
 @given(text(alphabet=string.printable, max_size=10),
@@ -79,8 +116,11 @@ def test_format_one_double(pre_str, fmt, post_str, val):
 
     try:
         pyfmt = fmt_str.format(val).replace(".E", "E").encode("ascii")
-    except (ValueError, IndexError, KeyError):
-        assume(False)
+    except (ValueError, IndexError, KeyError) as exp:
+        if "cannot switch from automatic field numbering" in str(exp):
+            assume(False)
+        assert build.FormatOneDoubleError(fmt_str.encode("ascii"), val)
+        return
 
     if len(pyfmt) < 100 and _DEBUG:
         print("{}.format({}) = {}".format(fmt_str, val, pyfmt))
@@ -91,7 +131,7 @@ def test_format_one_double(pre_str, fmt, post_str, val):
 
 
 @given(text(alphabet=string.printable, max_size=10),
-       from_regex(r"\A([:print:][<>=^][0-9]{0,4})?\Z"),
+       from_regex(r"\A([:print:][<>^][0-9]{0,4})?\Z"),
        text(alphabet=string.printable, max_size=10),
        text(alphabet=string.printable, max_size=10))
 @settings(max_examples=_NUM_TEST)
@@ -107,8 +147,11 @@ def test_format_one_str(pre_str, fmt, post_str, val):
 
     try:
         pyfmt = fmt_str.format(val).encode("ascii")
-    except (ValueError, IndexError, KeyError):
-        assume(False)
+    except (ValueError, IndexError, KeyError) as exp:
+        if "cannot switch from automatic field numbering" in str(exp):
+            assume(False)
+        assert build.FormatOneStringError(fmt_str.encode("ascii"), val.encode("ascii"))
+        return
 
     if _DEBUG:
         print("{}.format({}) = {}".format(fmt_str, val, pyfmt))
