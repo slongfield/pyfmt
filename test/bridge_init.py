@@ -22,3 +22,23 @@ def FormatOneString(fmt, a):
 
 def FormatNothing(fmt):
     return ffi.string(lib.FormatNothing(fmt))
+
+
+def FormatOneIntError(fmt, a):
+    return lib.FormatOneIntError(fmt, a)
+
+
+def FormatOneFloatError(fmt, a):
+    return lib.FormatOneFloatError(fmt, a)
+
+
+def FormatOneDoubleError(fmt, a):
+    return lib.FormatOneDoubleError(fmt, a)
+
+
+def FormatOneStringError(fmt, a):
+    return lib.FormatOneStringError(fmt, a)
+
+
+def FormatNothingError(fmt):
+    return lib.FormatNothingError(fmt)
