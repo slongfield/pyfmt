@@ -15,7 +15,7 @@ from hypothesis.strategies import floats, from_regex, integers, text
 
 import build
 
-_NUM_TEST = 1000
+_NUM_TEST = 10000
 _DEBUG = False
 
 

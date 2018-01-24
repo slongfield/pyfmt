@@ -140,7 +140,7 @@ func (f *ff) doFormat(format string) error {
 		}
 		i++
 		// If the next character is also '{', just put the '{' back in and continue.
-		if format[i] == '{' {
+		if i < end && format[i] == '{' {
 			f.buf.WriteString("{")
 			i++
 			continue
@@ -149,7 +149,7 @@ func (f *ff) doFormat(format string) error {
 		for i < end && format[i] != '}' {
 			i++
 		}
-		if format[i] != '}' {
+		if i >= end || format[i] != '}' {
 			return errors.New("Single '{' encountered in format string")
 		}
 		field := format[cachei:i]

@@ -87,7 +87,8 @@ func TestGetElement(t *testing.T) {
 	for _, test := range tests {
 		got, err := getElement(test.lookupStr, test.lookupOffset, test.elems...)
 		if err != nil {
-			t.Error(Must("getElement({lookupStr}, {lookupOffset}, {elems}) Errored: {1}", test, err))
+			//t.Error(Must("getElement({lookupStr}, {lookupOffset}, {elems}) Errored: {1}", test, err))
+			t.Errorf("getElement(%v, %v, %v) Errored: %v", test.lookupStr, test.lookupOffset, test.elems, err)
 		}
 		// If we got a reflect.Value, pull out the underlying element. These print correctly, but
 		// reflect.DeepEqual doesn't like the unboxing.
@@ -96,7 +97,8 @@ func TestGetElement(t *testing.T) {
 			got = elementFromValue(got.(reflect.Value))
 		}
 		if !reflect.DeepEqual(test.want, got) {
-			t.Error(Must("getElement({lookupStr}, {lookupOffset}, {elems}) = {1} ({1:t}) Want: {want} ({want:t})", test, got))
+			//t.Error(Must("getElement({lookupStr}, {lookupOffset}, {elems}) = {1} ({1:t}) Want: {want} ({want:t})", test, got))
+			t.Errorf("getElement(%v, %v, %v) = %v (%T), Want %v (%T)", test.lookupStr, test.lookupOffset, test.elems, got, got, test.want, test.want)
 		}
 	}
 }
@@ -129,24 +131,33 @@ func TestGetElementErrors(t *testing.T) {
 
 func TestSplitName(t *testing.T) {
 	tests := []struct {
-		name string
-		want []string
+		name      string
+		wantfield string
+		wantrem   string
 	}{
-		{"", []string{}},
-		{"test", []string{"test"}},
-		{"foo.bar", []string{"foo", "bar"}},
-		{"foo[3].bar", []string{"foo", "3", "bar"}},
-		{"baz[3][4][5]", []string{"baz", "3", "4", "5"}},
-		{"bar[3].4[5]", []string{"bar", "3", "4", "5"}},
+		{"", "", ""},
+		{"test", "test", ""},
+		{"foo.bar", "foo", "bar"},
+		{"foo[3].bar", "foo", "[3].bar"},
+		{"[3].bar", "3", "bar"},
+		{"bar", "bar", ""},
+		{"baz[3][4][5]", "baz", "[3][4][5]"},
+		{"bar[3].4[5]", "bar", "[3].4[5]"},
+		{"[3].4[5]", "3", "4[5]"},
+		{"4[5]", "4", "[5]"},
+		{"[5]", "5", ""},
 	}
 
 	for _, test := range tests {
-		got, err := splitName(test.name)
+		got, rem, err := splitName(test.name, false)
 		if err != nil {
 			t.Error(Must("splitName({name}) Errored: {1}", test, err))
 		}
-		if !reflect.DeepEqual(got, test.want) {
-			t.Error(Must("splitName({name}) = {1} Want: {want}", test, got))
+		if !reflect.DeepEqual(got, test.wantfield) {
+			t.Error(Must("splitName({name}) = {1}, {2} Want: {wantfield}, {wantrem}", test, got, rem))
+		}
+		if !reflect.DeepEqual(rem, test.wantrem) {
+			t.Error(Must("splitName({name}) = {1}, {2} Want: {wantfield}, {wantrem}", test, got, rem))
 		}
 	}
 }
@@ -155,7 +166,7 @@ func TestSplitNameError(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
-		{"te[3]st"},
+		{"[3]test"},
 		{"["},
 		{"[[["},
 		{"]"},
@@ -163,7 +174,7 @@ func TestSplitNameError(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		_, err := splitName(test.name)
+		_, _, err := splitName(test.name, false)
 		if err == nil {
 			t.Error(Must("splitName({name}) did not error", test))
 		}
