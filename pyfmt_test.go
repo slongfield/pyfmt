@@ -33,6 +33,8 @@ func TestBasicFormat(t *testing.T) {
 		{"{}_{}_{}", []interface{}{"a", "b", "c"}, "a_b_c"},
 		{"{1}_{0}", []interface{}{"a", "b"}, "b_a"},
 		{"{2}", []interface{}{"a", "b", "c"}, "c"},
+		{"{[1]}", []interface{}{[]string{"a", "b", "c"}}, "b"},
+		{"{[2]}", []interface{}{[]string{"a", "b", "c"}}, "c"},
 		{"{}{1}", []interface{}{"你好", "世界"}, "你好世界"},
 		{"{}", []interface{}{1}, "1"},
 		{"{}", []interface{}{int8(-1)}, "-1"},
@@ -191,6 +193,24 @@ func TestSingleFormat(t *testing.T) {
 		got := Must(test.fmtStr, test.param)
 		if got != test.want {
 			t.Error(Must("Must({fmtStr}, {param}) = {1}, Want: {want}", test, got))
+		}
+	}
+}
+
+func TestSingleFormatError(t *testing.T) {
+	tests := []struct {
+		fmtStr string
+		param  interface{}
+	}{
+		{"{", 0},
+		{"{[0]}", 0},
+		{"{[3]}", []string{"a", "b", "c"}},
+	}
+
+	for _, test := range tests {
+		_, err := Fmt(test.fmtStr, test.param)
+		if err == nil {
+			t.Error(Must("Fmt({fmtStr}, {param}) did not error when expected!", test))
 		}
 	}
 }

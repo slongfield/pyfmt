@@ -21,46 +21,54 @@ func getElement(name string, offset int, elems ...interface{}) (interface{}, err
 	if len(elems) == 0 {
 		return nil, Error("attempted to fetch {}/{} from empty list", name, offset)
 	}
-	fields, err := splitName(name)
+	field, remainder, err := splitName(name, true)
 	if err != nil {
 		return nil, err
 	}
 
 	val := elems[0]
-	idx := 0
-	if len(fields) == 0 || fields[0] == "" {
+	found := false
+	if field == "" {
 		if offset < len(elems) {
 			val = elems[offset]
-			idx++
+			found = true
 		} else {
 			return nil, Error("too large offset: {}", offset)
 		}
-	} else if parse, err := strconv.ParseUint(fields[0], 10, 64); err == nil {
+	} else if parse, err := strconv.ParseUint(field, 10, 64); err == nil {
 		if parse < uint64(len(elems)) {
 			val = elems[parse]
-			idx++
+			found = true
 		} else {
 			return nil, Error("index out of bounds: {}", parse)
 		}
 	}
 
-	if idx < len(fields) {
-		for _, field := range fields[idx:] {
-			val, err = elementByName(field, val)
-			if err != nil {
-				return nil, err
-			}
+	if !found {
+		val, err = elementByName(field, val)
+		if err != nil {
+			return nil, err
+		}
+	}
+	for remainder != "" {
+		field, remainder, err = splitName(remainder, false)
+		if err != nil {
+			return nil, err
+		}
+		val, err = elementByName(field, val)
+		if err != nil {
+			return nil, err
 		}
 	}
 	return val, nil
 }
 
-// splitName splits out the name into the subfields. Errors if it can't cleanly split.
-// Note that this does treat test[foo].bar and test.bar[foo] as being interchangeable. This normally
-// makes sense, especially for structs-of-structs and maps-of-maps, but may be somewhat strange for
-// lists of lists, where a[5][6] can be written a.5.6.
-func splitName(name string) ([]string, error) {
-	subNames := make([]string, 0, 0)
+// splitName splits the first subfield off of the name, returning both the that was split off and
+// the remainder. Errors if it can't be split.  Note that this does treat test[foo].bar and
+// test.bar[foo] as being interchangeable. This normally makes sense, especially for
+// structs-of-structs and maps-of-maps, but may be somewhat strange for lists of lists, where
+// a[5][6] can be written a.5.6.
+func splitName(name string, first bool) (string, string, error) {
 	end := len(name)
 	foundOpen := false
 	for i := 0; i < end; {
@@ -70,43 +78,41 @@ func splitName(name string) ([]string, error) {
 		}
 		if i < end {
 			if name[i] == '.' {
-				subNames = append(subNames, name[cachei:i])
-				i++
-				cachei = i
-				continue
+				return name[:i], name[(i + 1):], nil
 			}
 			if name[i] == ']' && foundOpen {
-				subNames = append(subNames, name[cachei:i])
-				i++
-				cachei = i
-				foundOpen = false
-				if i < end && !(name[i] == '[' || name[i] == '.') {
-					return nil, Error("must begin a new subfield after a closing bracket in {}", name)
-				} else if i < end {
-					foundOpen = (name[i] == '[')
-					i++
+				if i+1 < end && !(name[i+1] == '[' || name[i+1] == '.') {
+					return "", "", Error("must begin a new subfield after a closing bracket in {}", name)
 				}
-				continue
+				if i+1 < end {
+					return name[cachei:i], name[(i + 2):], nil
+				}
+				return name[cachei:i], name[(i + 1):], nil
 			}
 			if name[i] == ']' && !foundOpen {
-				return nil, Error("unmatched ] in {}", name)
+				return "", "", Error("unmatched ] in {}", name)
 			}
-			if name[i] == '[' {
-				subNames = append(subNames, name[cachei:i])
+			if name[i] == '[' && foundOpen {
+				return "", "", Error("unmatched [ in {}", name)
+			}
+			if name[i] == '[' && i == 0 && !first {
 				foundOpen = true
 				i++
 				cachei = i
 				continue
 			}
+			if name[i] == '[' {
+				return name[:i], name[i:], nil
+			}
 		} else {
-			subNames = append(subNames, name[cachei:i])
+			return name, "", nil
 		}
 		i++
 	}
 	if foundOpen {
-		return nil, Error("unmatched [ in {}", name)
+		return "", "", Error("unmatched [ in {}", name)
 	}
-	return subNames, nil
+	return name, "", nil
 }
 
 // elementByName will get the element by name if it's a struct or map, the an element by number

@@ -129,24 +129,33 @@ func TestGetElementErrors(t *testing.T) {
 
 func TestSplitName(t *testing.T) {
 	tests := []struct {
-		name string
-		want []string
+		name      string
+		wantfield string
+		wantrem   string
 	}{
-		{"", []string{}},
-		{"test", []string{"test"}},
-		{"foo.bar", []string{"foo", "bar"}},
-		{"foo[3].bar", []string{"foo", "3", "bar"}},
-		{"baz[3][4][5]", []string{"baz", "3", "4", "5"}},
-		{"bar[3].4[5]", []string{"bar", "3", "4", "5"}},
+		{"", "", ""},
+		{"test", "test", ""},
+		{"foo.bar", "foo", "bar"},
+		{"foo[3].bar", "foo", "[3].bar"},
+		{"[3].bar", "3", "bar"},
+		{"bar", "bar", ""},
+		{"baz[3][4][5]", "baz", "[3][4][5]"},
+		{"bar[3].4[5]", "bar", "[3].4[5]"},
+		{"[3].4[5]", "3", "4[5]"},
+		{"4[5]", "4", "[5]"},
+		{"[5]", "5", ""},
 	}
 
 	for _, test := range tests {
-		got, err := splitName(test.name)
+		got, rem, err := splitName(test.name, false)
 		if err != nil {
 			t.Error(Must("splitName({name}) Errored: {1}", test, err))
 		}
-		if !reflect.DeepEqual(got, test.want) {
-			t.Error(Must("splitName({name}) = {1} Want: {want}", test, got))
+		if !reflect.DeepEqual(got, test.wantfield) {
+			t.Error(Must("splitName({name}) = {1}, {2} Want: {wantfield}, {wantrem}", test, got, rem))
+		}
+		if !reflect.DeepEqual(rem, test.wantrem) {
+			t.Error(Must("splitName({name}) = {1}, {2} Want: {wantfield}, {wantrem}", test, got, rem))
 		}
 	}
 }
@@ -155,7 +164,7 @@ func TestSplitNameError(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
-		{"te[3]st"},
+		{"[3]test"},
 		{"["},
 		{"[[["},
 		{"]"},
@@ -163,7 +172,7 @@ func TestSplitNameError(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		_, err := splitName(test.name)
+		_, _, err := splitName(test.name, false)
 		if err == nil {
 			t.Error(Must("splitName({name}) did not error", test))
 		}
