@@ -11,8 +11,13 @@ from hypothesis.strategies import floats, from_regex, integers, text
 
 import build
 
+<<<<<<< HEAD
 _NUM_TEST = 10000
 _DEBUG = False
+=======
+_NUM_TEST = 1000
+_DEBUG = True
+>>>>>>> 1d9e13879fb32883f0fc660fbc64ae07cca89215
 
 
 @given(text(alphabet=string.printable))
