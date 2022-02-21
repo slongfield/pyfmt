@@ -17,3 +17,6 @@
 *.swp
 
 .cache*
+
+# Hypothesis venv
+test/.venv
