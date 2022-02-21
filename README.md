@@ -1,5 +1,5 @@
 # pyfmt
-[![Build Status](https://travis-ci.org/slongfield/pyfmt.svg?branch=master)](https://travis-ci.org/slongfield/pyfmt)
+![Build Status](https://github.com/slongfield/pyfmt/actions/workflows/go.yaml/badge.svg)
 
 pyfmt implements Python's advanced string formatting in Golang.
 
