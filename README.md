@@ -1,5 +1,5 @@
 # pyfmt
-![Build Status](https://github.com/slongfield/pyfmt/actions/workflows/go.yaml/badge.svg)
+![Build Status](https://github.com/slongfield/pyfmt/actions/workflows/go.yml/badge.svg)
 
 pyfmt implements Python's advanced string formatting in Golang.
 
