@@ -11,14 +11,8 @@ from hypothesis.strategies import floats, from_regex, integers, text
 
 import build
 
-<<<<<<< HEAD
 _NUM_TEST = 10000
 _DEBUG = False
-=======
-_NUM_TEST = 1000
-_DEBUG = True
->>>>>>> 1d9e13879fb32883f0fc660fbc64ae07cca89215
-
 
 @given(text(alphabet=string.printable))
 @settings(max_examples=_NUM_TEST)
@@ -113,7 +107,7 @@ def test_format_one_int_erros(pre_str, fmt, post_str, val):
            r"\.[1-9][0-9]{0,6}[eEfFgG]\Z"),
        text(alphabet=string.printable, max_size=10),
        floats(allow_nan=False, allow_infinity=False))
-@settings(max_examples=_NUM_TEST)
+@settings(max_examples=_NUM_TEST,deadline=None)
 def test_format_one_double(pre_str, fmt, post_str, val):
     """Test that a single double is formatted correctly.
 
