@@ -16,7 +16,7 @@ literal '{' and '}' runes to be emitted in the output.
 Each format item consists of a 'field name', which indicates which value from the argument list to
 use, and a 'format specifier', which indicates how to format that item.
 
-Requires Golang 1.5 or newer.
+Requires Golang 1.5 or newer for formatting, 1.9 or newer to run the tests.
 
 # Functions
 
