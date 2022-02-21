@@ -17,3 +17,11 @@
 *.swp
 
 .cache*
+
+# Test data
+test/.hypothesis/
+test/.venv/
+test/__pycache__/
+test/_bridge.py
+test/build/
+
