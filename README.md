@@ -36,7 +36,7 @@ names build off of simple names.
 
 The simplest look up treats the argument list as just a list. There are two possible ways to look up
 elements from this list. First, by {}, which gets the 'next' item and by {n}, which gets the nth
-item. Accessing these two ways is independent, and
+item. Accessing these two ways is independent but cannot be mixed, and
 
 ```
   pyfmt.Must("{} {} {}", ...)

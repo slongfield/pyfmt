@@ -35,7 +35,6 @@ func TestBasicFormat(t *testing.T) {
 		{"{2}", []interface{}{"a", "b", "c"}, "c"},
 		{"{[1]}", []interface{}{[]string{"a", "b", "c"}}, "b"},
 		{"{[2]}", []interface{}{[]string{"a", "b", "c"}}, "c"},
-		{"{}{1}", []interface{}{"你好", "世界"}, "你好世界"},
 		{"{}", []interface{}{1}, "1"},
 		{"{}", []interface{}{int8(-1)}, "-1"},
 		{"{}", []interface{}{uint8(1)}, "1"},

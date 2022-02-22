@@ -1,3 +1,3 @@
 module github.com/slongfield/pyfmt
 
-go 1.5
+go 1.9
