@@ -19,6 +19,9 @@ build/__init__.py: *.py build/
 	pip3 install -r requirements.txt;
 	touch .venv/touchfile
 
+.PHONY: debug-check
+debug-check: .venv/touchfile build/libbridge.so build/__init__.py
+	. .venv/bin/activate; pytest -s --hypothesis-show-statistics --hypothesis-verbosity=debug
 
 .PHONY: check
 check: .venv/touchfile build/libbridge.so build/__init__.py

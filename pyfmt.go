@@ -77,10 +77,12 @@ func (b *buffer) WriteAlignedString(s string, align int, width int64, fillChar r
 	}
 }
 
+// What type of numbering is being used to access fields. {} is automatic, {0} is manual.
+type numbering int
 const (
-	useMap = iota
-	useList
-	useStruct
+	unknown numbering = iota
+	automatic
+	manual
 )
 
 // ff is used to store a formatter's state and is reused with sync.Pool to avoid allocations.
@@ -90,6 +92,7 @@ type ff struct {
 	// args is the list of arguments passed to Fmt.
 	args    []interface{}
 	listPos int
+	numb numbering
 
 	// render renders format parameters
 	r render
@@ -103,6 +106,7 @@ var ffFree = sync.Pool{
 func newFormater() *ff {
 	f := ffFree.Get().(*ff)
 	f.listPos = 0
+	f.numb = unknown
 	f.r.init(&f.buf)
 	return f
 }
@@ -111,6 +115,7 @@ func (f *ff) free() {
 	f.buf.contents = f.buf.contents[:0]
 	f.args = f.args[:0]
 	f.listPos = 0
+	f.numb = unknown
 	ffFree.Put(f)
 }
 
@@ -194,6 +199,20 @@ func split(s string, sep rune) (string, string) {
 }
 
 func (f *ff) getArg(argName string) (interface{}, error) {
+	if f.numb == unknown {
+		if argName == "" {
+			f.numb = automatic
+		} else {
+			f.numb = manual
+		}
+	} else {
+		if argName == "" && f.numb == manual {
+			return nil, Error("cannot switch from manual field specification to automatic field numbering")
+		}
+		if argName != "" && f.numb == automatic {
+			return nil, Error("cannot switch from automatic field numbering to manual field specification")
+		}
+	} 
 	val, err := getElement(argName, f.listPos, f.args...)
 	if argName == "" {
 		f.listPos++

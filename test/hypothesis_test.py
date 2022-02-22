@@ -1,4 +1,4 @@
-"""Use the Python Hypotehsis library to test equivalence.
+"""Use the Python Hypothesis library to test equivalence.
 
 This uses constrained random generation to generate thousands of different examples of format
 strings and then formats them both with Python's format library, and the Go implementation in
@@ -6,19 +6,17 @@ pyfmt.
 """
 
 import string
-from hypothesis import assume, given, settings, HealthCheck
+from hypothesis import given, note, settings
 from hypothesis.strategies import floats, from_regex, integers, text
 
 import build
 
-_NUM_TEST = 10000
-_DEBUG = False
+_NUM_TEST = 1000
 
 @given(text(alphabet=string.printable))
 @settings(max_examples=_NUM_TEST)
 def test_no_format_arguments(fmt_str):
     """Test that without format arguments, it's OK."""
-    # First format it with pyfmt. If it doesn't format correctly, toss out this test run.
     try:
         pyfmt = fmt_str.format().encode("ascii")
     except (ValueError, IndexError, KeyError):
@@ -30,75 +28,28 @@ def test_no_format_arguments(fmt_str):
     assert gofmt == pyfmt
 
 
-@given(text(alphabet=string.printable))
-@settings(max_examples=_NUM_TEST)
-def test_no_format_arguments_errors(fmt_str):
-    """Test that without format arguments, match error conditions."""
-    if _DEBUG:
-        print("{}.format()".format(fmt_str))
-
-    # If python errors, golang should error.
-    try:
-        fmt_str.format().encode("ascii")
-    except (ValueError, IndexError, KeyError):
-        assert build.FormatNothingError(fmt_str.encode("ascii"))
-        return
-
-    # If python did not error, Golang shouldn't error.
-    try:
-        build.FormatNothing(fmt_str.encode("ascii"))
-    except e:
-        assert False
-
-
 @given(text(alphabet=string.printable, max_size=10),
        from_regex(r"\A(([:print:][<>=^])|([<>=^]?))[\+\- ]?#?[0-9]{0,4}[bdoxX]\Z"),
        text(alphabet=string.printable, max_size=10),
        integers(min_value=-2**31, max_value=2**31 - 1))
-@settings(max_examples=_NUM_TEST,suppress_health_check=(HealthCheck.filter_too_much,))
+@settings(max_examples=_NUM_TEST)
 def test_format_one_int(pre_str, fmt, post_str, val):
     """Test that a single integer is formatted correctly."""
     fmt_str = pre_str + "{:" + fmt + "}" + post_str
+    note("{}.format({})".format(fmt_str, val))
 
     try:
         pyfmt = fmt_str.format(val).encode("ascii")
-    except (ValueError, IndexError, KeyError) as exp:
-        # Ignore the cases where formatting goes from {} to {0} formatting. The Go
-        # implementation supports this, but Python's doesn't
-        if "cannot switch from automatic field numbering" in str(exp):
-            assume(False)
+        note("Formatted: {}".format(pyfmt))
 
+    except (ValueError, IndexError, KeyError) as exp:
+        note("Errored: {}".format(exp))
         assert build.FormatOneIntError(fmt_str.encode("ascii"), val)
         return
-
-    if _DEBUG:
-        print("{}.format({}) = {}".format(fmt_str, val, pyfmt))
 
     gofmt = build.FormatOneInt(fmt_str.encode("ascii"), val)
 
     assert gofmt == pyfmt
-
-
-@given(text(alphabet=string.printable, max_size=10),
-       from_regex(r"\A(([:print:][<>=^])|([<>=^]?))[\+\- ]?#?[0-9]{0,4}[bdoxX]\Z"),
-       text(alphabet=string.printable, max_size=10),
-       integers(min_value=-2**31, max_value=2**31 - 1))
-@settings(max_examples=_NUM_TEST,suppress_health_check=(HealthCheck.filter_too_much,))
-def test_format_one_int_erros(pre_str, fmt, post_str, val):
-    """Test that a single integer is formatted correctly."""
-    fmt_str = pre_str + "{:" + fmt + "}" + post_str
-
-    try:
-        fmt_str.format(val).encode("ascii")
-    except (ValueError, IndexError, KeyError) as exp:
-        # Ignore the cases where formatting goes from {} to {0} formatting. The Go
-        # implementation supports this, but Python's doesn't
-        if "cannot switch from automatic field numbering" in str(exp):
-            assume(False)
-
-        assert build.FormatOneIntError(fmt_str.encode("ascii"), val)
-        return
-    assume(False)
 
 
 @given(text(alphabet=string.printable, max_size=10),
@@ -121,17 +72,16 @@ def test_format_one_double(pre_str, fmt, post_str, val):
     differences beteen Golang and Python here.
     """
     fmt_str = pre_str.replace(".E", "E") + "{:" + fmt + "}" + post_str.replace(".E", "E")
+    note("{}.format({})".format(fmt_str, val))
 
     try:
         pyfmt = fmt_str.format(val).replace(".E", "E").encode("ascii")
+        note("Formatted: {}".format(pyfmt))
+
     except (ValueError, IndexError, KeyError) as exp:
-        if "cannot switch from automatic field numbering" in str(exp):
-            assume(False)
+        note("Errored: {}".format(exp))
         assert build.FormatOneDoubleError(fmt_str.encode("ascii"), val)
         return
-
-    if len(pyfmt) < 100 and _DEBUG:
-        print("{}.format({}) = {}".format(fmt_str, val, pyfmt))
 
     gofmt = build.FormatOneDouble(fmt_str.encode("ascii"), val)
 
@@ -152,17 +102,16 @@ def test_format_one_str(pre_str, fmt, post_str, val):
     strings, despite the PEP3101 documentation saying that the alignment is left by default.
     """
     fmt_str = pre_str + "{:" + fmt + "}" + post_str
+    note("{}.format({})".format(fmt_str, val))
 
     try:
         pyfmt = fmt_str.format(val).encode("ascii")
+        note("Formatted: {}".format(pyfmt))
+
     except (ValueError, IndexError, KeyError) as exp:
-        if "cannot switch from automatic field numbering" in str(exp):
-            assume(False)
+        note("Errored: {}".format(exp))
         assert build.FormatOneStringError(fmt_str.encode("ascii"), val.encode("ascii"))
         return
-
-    if _DEBUG:
-        print("{}.format({}) = {}".format(fmt_str, val, pyfmt))
 
     gofmt = build.FormatOneString(fmt_str.encode("ascii"), val.encode("ascii"))
 
